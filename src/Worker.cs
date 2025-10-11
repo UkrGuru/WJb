@@ -1,11 +1,17 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using UkrGuru.Sql;
+using UkrGuru.WJb.Data;
+using UkrGuru.WJb.Extensions;
+using UkrGuru.WJb.SqlQueries;
 
 namespace UkrGuru.WJb;
 
-public class Worker(ILogger<Worker> logger) : BackgroundService
+public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
 {
+    private readonly IDbService _db = db;
     private readonly ILogger<Worker> _logger = logger;
+
     private static readonly Random _random = new();
 
     public virtual int NoDelay => 0;
@@ -15,17 +21,17 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var nextExecutionDelay = MinDelay;
+        var nextDelay = MinDelay;
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var taskSuggestedDelay = await DoWorkAsync(stoppingToken);
+            var stepDelay = await DoWorkAsync(stoppingToken);
 
-            nextExecutionDelay = (taskSuggestedDelay > 0)
-                ? Math.Min(nextExecutionDelay + taskSuggestedDelay, MaxDelay)
+            nextDelay = (stepDelay > 0)
+                ? Math.Min(nextDelay + stepDelay, MaxDelay)
                 : MinDelay;
 
-            await Task.Delay(nextExecutionDelay, stoppingToken);
+            await Task.Delay(nextDelay, stoppingToken);
         }
     }
 
@@ -38,18 +44,18 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
 
             if (jobId > 0)
             {
-                bool exec_result = false;
+                bool execResult = false;
                 try
                 {
-                    exec_result = await ProcessJobAsync(jobId, stoppingToken);
+                    execResult = await ProcessJobAsync(jobId, stoppingToken);
                 }
-                catch 
+                catch
                 {
                     delay = NewDelay;
                 }
                 finally
                 {
-                    await FinishJobAsync(jobId, exec_result, stoppingToken);
+                    await FinishJobAsync(jobId, execResult, stoppingToken);
                 }
             }
             else
@@ -57,7 +63,7 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
                 delay = NewDelay;
             }
         }
-        catch 
+        catch
         {
             delay = NewDelay;
         }
@@ -66,21 +72,24 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
     }
 
     public virtual async Task<int> StartJobAsync(CancellationToken stoppingToken)
-    {
-        int jobId = _random.Next(0, 2) == 1 ? _random.Next(1, 1000) : 0;
-
-        return await Task.FromResult(jobId);
-    }
+        => await _db.ExecAsync<int>(WJbQueue.Start, cancellationToken: stoppingToken);
 
     public virtual async Task<bool> ProcessJobAsync(int jobId, CancellationToken stoppingToken)
     {
-        bool execResult = _random.Next(0, 2) == 1;
+        bool execResult = false, nextResult = false;
+
+        var job = (await _db.ReadAsync<Job>(WJbQueue.Get, jobId, cancellationToken: stoppingToken)).FirstOrDefault();
+        ArgumentNullException.ThrowIfNull(job);
+
+        var action = job.CreateAction();
+
+        execResult = await action.ExecuteAsync(stoppingToken);
+
+        nextResult = await action.NextAsync(execResult, stoppingToken);
 
         return await Task.FromResult(execResult);
     }
 
-    public virtual Task FinishJobAsync(int jobId, bool exec_result, CancellationToken stoppingToken)
-    {
-        return Task.CompletedTask;
-    }
+    public virtual async Task FinishJobAsync(int jobId, bool execResult, CancellationToken stoppingToken)
+        => await _db.ExecAsync(WJbQueue.Finish, new { JobId = jobId, JobStatus = execResult ? JobStatus.Completed : JobStatus.Failed }, cancellationToken: stoppingToken);
 }

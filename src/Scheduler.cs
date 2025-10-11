@@ -1,26 +1,29 @@
 ﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using UkrGuru.Sql;
 
 namespace UkrGuru.WJb;
 
-public class Scheduler(ILogger<Scheduler> logger) : BackgroundService
+public class Scheduler(IDbService db, ILogger<Worker> logger) : BackgroundService
 {
-    private readonly ILogger<Scheduler> _logger = logger;
-
-    private int _currentDelay;
+    private readonly IDbService _db = db;
+    private readonly ILogger<Worker> _logger = logger;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var nextDelay = MinDelay;
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            await DoWorkAsync(stoppingToken);
-            await Task.Delay(_currentDelay, stoppingToken);
+            var stepDelay = await DoWorkAsync(stoppingToken);
+
+            await Task.Delay(nextDelay, stoppingToken);
         }
     }
 
-    protected virtual async Task DoWorkAsync(CancellationToken stoppingToken)
+    public virtual async Task<int> DoWorkAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Scheduler running at: {time}", DateTimeOffset.Now);
-        await Task.CompletedTask;
+        var delay = NoDelay;
+        return await Task.FromResult(delay);
     }
 }
