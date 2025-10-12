@@ -2,7 +2,16 @@
 
 internal static class WJbQueue
 {
-    internal static readonly string Get = """
+    internal const string Ins_Cron = """
+        INSERT INTO WJbQueue (RuleId, JobPriority, JobStatus)
+        SELECT RuleId, RulePriority, 1 /* Queued */ 
+        FROM WJbRules
+        WHERE Disabled = 0 AND NOT EXISTS (SELECT 1 FROM WJbQueue WHERE RuleId = WJbRules.RuleId)
+        AND ISJSON(RuleMore) = 1 AND JSON_VALUE(RuleMore, '$.cron') IS NOT NULL
+        AND dbo.CronValidate(JSON_VALUE(RuleMore, '$.cron'), GETDATE()) = 1;
+        """;
+
+    internal const string Get = """
         SELECT TOP (1) Q.*, R.RuleName, R.RuleMore, A.ActionName, A.ActionType, A.ActionMore
         FROM WJbQueue Q
         INNER JOIN WJbRules R ON Q.RuleId = R.RuleId 
@@ -10,7 +19,7 @@ internal static class WJbQueue
         WHERE Q.JobId = @Data
         """;
 
-    internal static readonly string Start = """
+    internal const string Start = """
         ;WITH cte AS (
             SELECT TOP 1 JobId
             FROM WJbQueue
@@ -22,7 +31,7 @@ internal static class WJbQueue
         OUTPUT inserted.JobId;
         """;
 
-    internal static readonly string Finish = """
+    internal const string Finish = """
         DELETE FROM WJbQueue (JobId, JobPriority, Created, RuleId, Started, Finished, JobMore, JobStatus)        
         OUTPUT 
             deleted.JobId,

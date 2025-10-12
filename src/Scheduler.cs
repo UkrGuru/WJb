@@ -1,29 +1,43 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using UkrGuru.Sql;
+using UkrGuru.WJb.SqlQueries;
 
 namespace UkrGuru.WJb;
 
-public class Scheduler(IDbService db, ILogger<Worker> logger) : BackgroundService
+public class Scheduler(IConfiguration config, ILogger<Scheduler> logger, IDbService db) : BackgroundService
 {
+    private readonly IConfiguration _config = config;
+    private readonly ILogger<Scheduler> _logger = logger;
     private readonly IDbService _db = db;
-    private readonly ILogger<Worker> _logger = logger;
+
+    public virtual string AppName => _config["WJbSettings:AppName"] ?? "UnknownApp";
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var nextDelay = MinDelay;
+        _logger.LogInformation("{AppName} Scheduler started.", AppName);
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var stepDelay = await DoWorkAsync(stoppingToken);
-
-            await Task.Delay(nextDelay, stoppingToken);
+            try
+            {
+                await CreateJobsAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{AppName} Scheduler.CreateJobsAsync crashed.", AppName);
+            }
         }
+
+        _logger.LogInformation("{AppName} Scheduler stopped.", AppName);
     }
 
-    public virtual async Task<int> DoWorkAsync(CancellationToken stoppingToken)
+
+    public virtual async Task CreateJobsAsync(CancellationToken stoppingToken)
     {
-        var delay = NoDelay;
-        return await Task.FromResult(delay);
+        await Task.Delay(60000 - DateTime.Now.Second * 1000, stoppingToken);
+
+        await _db.ExecAsync(WJbQueue.Ins_Cron, timeout: 50, cancellationToken: stoppingToken);
     }
 }

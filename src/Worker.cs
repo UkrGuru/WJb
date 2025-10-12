@@ -1,18 +1,21 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 using UkrGuru.Sql;
+using UkrGuru.WJb.Actions;
 using UkrGuru.WJb.Data;
-using UkrGuru.WJb.Extensions;
 using UkrGuru.WJb.SqlQueries;
 
 namespace UkrGuru.WJb;
 
-public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
+public class Worker(IConfiguration config, ILogger<Worker> logger, IDbService db) : BackgroundService
 {
-    private readonly IDbService _db = db;
+    private readonly IConfiguration _config = config;
     private readonly ILogger<Worker> _logger = logger;
+    private readonly IDbService _db = db;
 
-    private static readonly Random _random = new();
+    public virtual string AppName => _config["WJbSettings:AppName"] ?? "UnknownApp";
 
     public virtual int NoDelay => 0;
     public virtual int MinDelay => 100;
@@ -21,6 +24,8 @@ public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _logger.LogInformation("{AppName} Worker started.", AppName);
+
         var nextDelay = MinDelay;
 
         while (!stoppingToken.IsCancellationRequested)
@@ -33,6 +38,8 @@ public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
 
             await Task.Delay(nextDelay, stoppingToken);
         }
+
+        _logger.LogInformation("{AppName} Worker stopped.", AppName);
     }
 
     public virtual async Task<int> DoWorkAsync(CancellationToken stoppingToken)
@@ -49,8 +56,10 @@ public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
                 {
                     execResult = await ProcessJobAsync(jobId, stoppingToken);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogWarning(ex, "{AppName} Job #{JobId} crashed.", AppName, jobId);
+
                     delay = NewDelay;
                 }
                 finally
@@ -63,8 +72,10 @@ public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
                 delay = NewDelay;
             }
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "{AppName} Worker.DoWorkAsync crashed.", AppName);
+
             delay = NewDelay;
         }
 
@@ -76,20 +87,45 @@ public class Worker(IDbService db, ILogger<Worker> logger) : BackgroundService
 
     public virtual async Task<bool> ProcessJobAsync(int jobId, CancellationToken stoppingToken)
     {
-        bool execResult = false, nextResult = false;
+        try
+        {
+            bool execResult = false, nextResult = false;
 
-        var job = (await _db.ReadAsync<Job>(WJbQueue.Get, jobId, cancellationToken: stoppingToken)).FirstOrDefault();
-        ArgumentNullException.ThrowIfNull(job);
+            var job = await GetJobAsync(jobId, stoppingToken);
+            ArgumentNullException.ThrowIfNull(job);
 
-        var action = job.CreateAction();
+            var action = CreateAction(job);
 
-        execResult = await action.ExecuteAsync(stoppingToken);
+            execResult = await action.ExecAsync(stoppingToken);
 
-        nextResult = await action.NextAsync(execResult, stoppingToken);
+            nextResult = await action.NextAsync(execResult, stoppingToken);
 
-        return await Task.FromResult(execResult);
+            return await Task.FromResult(execResult);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"ProcessJobAsync: {ex.Message}", ex);
+        }
     }
 
     public virtual async Task FinishJobAsync(int jobId, bool execResult, CancellationToken stoppingToken)
         => await _db.ExecAsync(WJbQueue.Finish, new { JobId = jobId, JobStatus = execResult ? JobStatus.Completed : JobStatus.Failed }, cancellationToken: stoppingToken);
+
+    public virtual async Task<Job?> GetJobAsync(int jobId, CancellationToken stoppingToken)
+        => (await _db.ReadAsync<Job>(WJbQueue.Get, jobId, cancellationToken: stoppingToken)).FirstOrDefault();
+
+    public virtual IAction CreateAction(Job job)
+    {
+        ArgumentNullException.ThrowIfNull(job.ActionType);
+
+        var type = Type.GetType($"UkrGuru.WJb.Actions.{job.ActionType}") ?? Type.GetType(job.ActionType);
+        ArgumentNullException.ThrowIfNull(type);
+
+        var action = Activator.CreateInstance(type) as IAction;
+        ArgumentNullException.ThrowIfNull(action);
+
+        action.Init(job);
+
+        return action;
+    }
 }
