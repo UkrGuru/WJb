@@ -22,6 +22,10 @@ public class Scheduler(IConfiguration config, ILogger<Scheduler> logger, IDbServ
         {
             try
             {
+                int millisecondsDelay = CalcDelay(DateTime.Now);
+
+                await Task.Delay(millisecondsDelay, stoppingToken);
+
                 await CreateJobsAsync(stoppingToken);
             }
             catch (Exception ex)
@@ -33,11 +37,8 @@ public class Scheduler(IConfiguration config, ILogger<Scheduler> logger, IDbServ
         _logger.LogInformation("{AppName} Scheduler stopped.", AppName);
     }
 
+    public virtual int CalcDelay(DateTime now) => 60000 - now.Second * 1000 - now.Millisecond + 25;
 
     public virtual async Task CreateJobsAsync(CancellationToken stoppingToken)
-    {
-        await Task.Delay(60000 - DateTime.Now.Second * 1000, stoppingToken);
-
-        await _db.ExecAsync(WJbQueue.Ins_Cron, timeout: 50, cancellationToken: stoppingToken);
-    }
+        => await _db.ExecAsync(WJbQueue.Ins_Cron, timeout: 50, cancellationToken: stoppingToken);
 }

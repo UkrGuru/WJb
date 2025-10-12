@@ -3,12 +3,12 @@
 internal static class WJbQueue
 {
     internal const string Ins_Cron = """
+        DECLARE @Now smalldatetime = GETDATE();
         INSERT INTO WJbQueue (RuleId, JobPriority, JobStatus)
-        SELECT RuleId, RulePriority, 1 /* Queued */ 
+        SELECT RuleId, RulePriority, 1 JobStatus    -- Queued
         FROM WJbRules
-        WHERE Disabled = 0 AND NOT EXISTS (SELECT 1 FROM WJbQueue WHERE RuleId = WJbRules.RuleId)
-        AND ISJSON(RuleMore) = 1 AND JSON_VALUE(RuleMore, '$.cron') IS NOT NULL
-        AND dbo.CronValidate(JSON_VALUE(RuleMore, '$.cron'), GETDATE()) = 1;
+        WHERE Disabled = 0 
+        AND dbo.CronValidate(JSON_VALUE(RuleMore, '$.cron'), @Now) = 1
         """;
 
     internal const string Get = """
@@ -21,13 +21,13 @@ internal static class WJbQueue
 
     internal const string Start = """
         ;WITH cte AS (
-            SELECT TOP 1 JobId
+            SELECT TOP (1) JobId
             FROM WJbQueue
             WHERE Started IS NULL
             ORDER BY JobPriority ASC, JobId ASC
         )
         UPDATE cte
-        SET Started = GETDATE(), JobStatus = 2 -- Running
+        SET Started = GETDATE(), JobStatus = 2      -- Running
         OUTPUT inserted.JobId;
         """;
 

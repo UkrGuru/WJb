@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 using UkrGuru.Sql;
 using UkrGuru.WJb.Actions;
 using UkrGuru.WJb.Data;
@@ -87,25 +86,18 @@ public class Worker(IConfiguration config, ILogger<Worker> logger, IDbService db
 
     public virtual async Task<bool> ProcessJobAsync(int jobId, CancellationToken stoppingToken)
     {
-        try
-        {
-            bool execResult = false, nextResult = false;
+        bool execResult = false, nextResult = false;
 
-            var job = await GetJobAsync(jobId, stoppingToken);
-            ArgumentNullException.ThrowIfNull(job);
+        var job = await GetJobAsync(jobId, stoppingToken);
+        ArgumentNullException.ThrowIfNull(job);
 
-            var action = CreateAction(job);
+        var action = CreateAction(job);
 
-            execResult = await action.ExecAsync(stoppingToken);
+        execResult = await action.ExecAsync(stoppingToken);
 
-            nextResult = await action.NextAsync(execResult, stoppingToken);
+        nextResult = await action.NextAsync(execResult, stoppingToken);
 
-            return await Task.FromResult(execResult);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"ProcessJobAsync: {ex.Message}", ex);
-        }
+        return await Task.FromResult(execResult);
     }
 
     public virtual async Task FinishJobAsync(int jobId, bool execResult, CancellationToken stoppingToken)
