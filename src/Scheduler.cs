@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿// Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using UkrGuru.Sql;
@@ -12,7 +15,7 @@ public class Scheduler(IConfiguration config, ILogger<Scheduler> logger, IDbServ
     private readonly ILogger<Scheduler> _logger = logger;
     private readonly IDbService _db = db;
 
-    public virtual string AppName => _config["WJbSettings:AppName"] ?? "UnknownApp";
+    public virtual string AppName => _config["WJbSettings:AppName"] ?? "WJbApp";
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

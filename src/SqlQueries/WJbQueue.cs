@@ -1,4 +1,7 @@
-﻿namespace UkrGuru.WJb.SqlQueries;
+﻿// Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+namespace UkrGuru.WJb.SqlQueries;
 
 internal static class WJbQueue
 {
@@ -9,14 +12,6 @@ internal static class WJbQueue
         FROM WJbRules
         WHERE Disabled = 0 
         AND dbo.CronValidate(JSON_VALUE(RuleMore, '$.cron'), @Now) = 1
-        """;
-
-    internal const string Get = """
-        SELECT TOP (1) Q.*, R.RuleName, R.RuleMore, A.ActionName, A.ActionType, A.ActionMore
-        FROM WJbQueue Q
-        INNER JOIN WJbRules R ON Q.RuleId = R.RuleId 
-        INNER JOIN WJbActions A ON R.ActionId = A.ActionId
-        WHERE Q.JobId = @Data
         """;
 
     internal const string Start = """
@@ -44,5 +39,13 @@ internal static class WJbQueue
             @JobStatus AS JobStatus
         INTO WJbHistory
         WHERE JobId = @JobId AND Started IS NOT NULL;
+        """;
+
+    internal const string Get = """
+        SELECT TOP (1) Q.*, R.RuleName, R.RuleMore, A.ActionName, A.ActionType, A.ActionMore
+        FROM WJbQueue Q
+        INNER JOIN WJbRules R ON Q.RuleId = R.RuleId 
+        INNER JOIN WJbActions A ON R.ActionId = A.ActionId
+        WHERE Q.JobId = @Data
         """;
 }

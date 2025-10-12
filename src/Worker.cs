@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿// Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+// Licensed under the MIT License. See License.txt in the project root for license information.
+
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using UkrGuru.Sql;
@@ -14,7 +17,7 @@ public class Worker(IConfiguration config, ILogger<Worker> logger, IDbService db
     private readonly ILogger<Worker> _logger = logger;
     private readonly IDbService _db = db;
 
-    public virtual string AppName => _config["WJbSettings:AppName"] ?? "UnknownApp";
+    public virtual string AppName => _config["WJbSettings:AppName"] ?? "WJbApp";
 
     public virtual int NoDelay => 0;
     public virtual int MinDelay => 100;
