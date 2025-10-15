@@ -42,7 +42,10 @@ internal static class WJbQueue
         """;
 
     internal const string Get = """
-        SELECT TOP (1) Q.*, R.RuleName, R.RuleMore, A.ActionName, A.ActionType, A.ActionMore
+        SELECT TOP (1) 
+            Q.JobId, Q.JobPriority, Q.Created, Q.RuleId, Q.Started, Q.Finished, Q.JobMore, Q.JobStatus,
+            R.RuleName, R.RuleMore, 
+            A.ActionName, A.ActionType, A.ActionMore
         FROM WJbQueue Q
         INNER JOIN WJbRules R ON Q.RuleId = R.RuleId 
         INNER JOIN WJbActions A ON R.ActionId = A.ActionId
