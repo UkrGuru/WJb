@@ -7,11 +7,11 @@ BEGIN
 		[ActionId] [int] IDENTITY(1000,1) NOT NULL,
 		[ActionName] [nvarchar](100) NOT NULL,
 		[ActionType] [nvarchar](255) NOT NULL,
-		[ActionMore] [nvarchar](MAX) NULL,
+		[ActionMore] [nvarchar](2000) NULL,
 		[Disabled] [bit] NOT NULL DEFAULT (0),
 		CONSTRAINT [PK_WJbActions] PRIMARY KEY CLUSTERED ([ActionId] ASC),
 		CONSTRAINT [UX_WJbActions_ActionName] UNIQUE NONCLUSTERED ([ActionName] ASC),
-		CONSTRAINT [CK_WJbActions_ActionMore_ValidJson] CHECK ([ActionMore] IS NULL OR isjson([ActionMore]) = (1))
+		CONSTRAINT [CK_WJbActions_ActionMore_ValidJson] CHECK ([ActionMore] IS NULL  OR isjson([ActionMore]) = (1) OR TRY_CAST([ActionMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
 	) ON [PRIMARY]
 
     --CREATE NONCLUSTERED INDEX IX_WJbActions_EnabledOnly ON WJbActions(ActionName) WHERE Disabled = 0;
@@ -27,11 +27,11 @@ BEGIN
 		[Disabled] [bit] NOT NULL DEFAULT (0),
 		[ActionId] [int] NOT NULL,
 		[RulePriority] [tinyint] NOT NULL DEFAULT (2),
-		[RuleMore] [nvarchar](MAX) NULL,
+		[RuleMore] [nvarchar](2000) NULL,
 	 CONSTRAINT [PK_WJbRules] PRIMARY KEY CLUSTERED ([RuleId] ASC),
 	 CONSTRAINT [UX_WJbRules_RuleName] UNIQUE NONCLUSTERED ([RuleName] ASC),
 	 CONSTRAINT [FK_WJbRules_WJbActions] FOREIGN KEY([ActionId]) REFERENCES [dbo].[WJbActions] ([ActionId]),
-	 CONSTRAINT [CK_WJbRules_RuleMore_ValidJson] CHECK ([RuleMore] IS NULL OR isjson([RuleMore]) = (1))
+	 CONSTRAINT [CK_WJbRules_RuleMore_ValidJson] CHECK ([RuleMore] IS NULL OR isjson([RuleMore]) = (1) OR TRY_CAST([RuleMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
 	) ON [PRIMARY]
 	
     CREATE NONCLUSTERED INDEX IX_WJbRules_ActionId ON WJbRules(ActionId);
@@ -50,12 +50,12 @@ BEGIN
         [RuleId] [int] NOT NULL,
         [Started] [datetime] NULL,
         [Finished] [datetime] NULL,
-        [JobMore] [nvarchar](MAX) NULL,
+        [JobMore] [nvarchar](2000) NULL,
         [JobStatus] [tinyint] NOT NULL DEFAULT (0),
         CONSTRAINT [PK_WJbQueue] PRIMARY KEY CLUSTERED ([JobId] ASC),
         CONSTRAINT [FK_WJbQueue_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [WJbRules] ([RuleId]),
         CONSTRAINT [CK_WJbQueue_JobStatus] CHECK ([JobStatus] IN (0, 1, 2, 3, 4, 5)),
-        CONSTRAINT [CK_WJbQueue_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1))
+        CONSTRAINT [CK_WJbQueue_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1) OR TRY_CAST([JobMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
     ) ON [PRIMARY]
 END
 END
@@ -70,12 +70,12 @@ BEGIN
 		[RuleId] [int] NOT NULL,
 		[Started] [datetime] NULL,
 		[Finished] [datetime] NULL,
-		[JobMore] [nvarchar](MAX) NULL,
+		[JobMore] [nvarchar](2000) NULL,
 		[JobStatus] [tinyint] NOT NULL,
 		CONSTRAINT [PK_WJbHistory] PRIMARY KEY CLUSTERED ([JobId] DESC),
 		CONSTRAINT [FK_WJbHistory_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [WJbRules] ([RuleId]),
 		CONSTRAINT [CK_WJbHistory_JobStatus] CHECK ([JobStatus] IN (0, 1, 2, 3, 4, 5)),
-		CONSTRAINT [CK_WJbHistory_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1))
+		CONSTRAINT [CK_WJbHistory_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1) OR TRY_CAST([JobMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
 	) ON [PRIMARY]
 
 	CREATE NONCLUSTERED INDEX [IX_WJbHistory_RuleId] ON [WJbHistory] ([RuleId] ASC)
@@ -92,58 +92,62 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronPartValues] (@Input VARCHAR(20), @DefaultMin INT, @DefaultMax INT, @DefaultStep INT)
-RETURNS VARCHAR(200)
+CREATE OR ALTER FUNCTION [CronMax] (@expression VARCHAR(20), @default INT)
+RETURNS INT
 AS
 BEGIN
-    DECLARE @Result VARCHAR(200);
-	DECLARE @Min INT = @DefaultMin, @Max INT = @DefaultMax, @Step INT = @DefaultStep;
+    DECLARE @max INT = NULL;
 
-	IF @Input = ''*''
-	BEGIN
-		SET @Min = @DefaultMin
-	END
-    ELSE IF @Input LIKE ''*/%''
-    BEGIN
-        SET @Step = TRY_CAST(SUBSTRING(@Input, 3, LEN(@Input)) AS INT);
-    END
-    ELSE IF @Input LIKE ''%-%/%''
-    BEGIN
-        DECLARE @DashPos INT = CHARINDEX(''-'', @Input);
-        DECLARE @SlashPos INT = CHARINDEX(''/'', @Input);
+    DECLARE @slashPos int = CHARINDEX(''/'', @expression);
+    IF @slashPos > 0 SET @expression = LEFT(@expression, @slashPos - 1)
 
-        SET @Min = TRY_CAST(SUBSTRING(@Input, 1, @DashPos - 1) AS INT);
-        SET @Max = TRY_CAST(SUBSTRING(@Input, @DashPos + 1, @SlashPos - @DashPos - 1) AS INT);
-        SET @Step = TRY_CAST(SUBSTRING(@Input, @SlashPos + 1, LEN(@Input)) AS INT);
-    END
-    ELSE IF @Input LIKE ''%/%''
-    BEGIN
-        DECLARE @SlashPos2 INT = CHARINDEX(''/'', @Input);
-        SET @Min = TRY_CAST(SUBSTRING(@Input, 1, @SlashPos2 - 1) AS INT);
-        SET @Step = TRY_CAST(SUBSTRING(@Input, @SlashPos2 + 1, LEN(@Input)) AS INT);
-    END
-    ELSE IF @Input LIKE ''%-%''
-    BEGIN
-        DECLARE @DashPos2 INT = CHARINDEX(''-'', @Input);
-        SET @Min = TRY_CAST(SUBSTRING(@Input, 1, @DashPos2 - 1) AS INT);
-        SET @Max = TRY_CAST(SUBSTRING(@Input, @DashPos2 + 1, LEN(@Input)) AS INT);
-    END
+    DECLARE @dashPos int = CHARINDEX(''-'', @expression)
+    SET @max = IIF(@dashPos > 0, TRY_CAST(SUBSTRING(@expression, @dashPos + 1, LEN(@expression)) AS INT), @default);
+
+    RETURN IIF(@max < @default, @max, @default);
+END
+';
+
+EXEC dbo.sp_executesql @statement = N'
+-- ==============================================================
+-- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+-- ==============================================================
+CREATE OR ALTER FUNCTION [CronMin] (@expression VARCHAR(20), @default INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @min INT = NULL;
+
+    DECLARE @dashPos int = CHARINDEX(''-'', @expression)
+    IF @dashPos > 0
+        SET @min = TRY_CAST(LEFT(@expression, @dashPos - 1) AS INT);
     ELSE 
     BEGIN
-        SET @Min = TRY_CAST(@Input AS INT);
-        SET @Max = @Min;
+        DECLARE @slashPos int = CHARINDEX(''/'', @expression);
+        IF @slashPos > 0
+            SET @min = TRY_CAST(LEFT(@expression, @slashPos - 1) AS INT);
+        ELSE
+            SET @min = TRY_CAST(@expression AS INT);
     END
 
-    ;WITH Numbers AS (
-        SELECT @Min AS n
-        UNION ALL
-        SELECT n + @Step FROM Numbers WHERE n + @Step <= @Max
-    )
-    SELECT @Result = STRING_AGG(CAST(n AS VARCHAR), '','')
-    FROM Numbers
-    OPTION (MAXRECURSION 0);
+    RETURN IIF(@min > @default, @min, @default);
+END
+';
 
-    RETURN @Result
+EXEC dbo.sp_executesql @statement = N'
+-- ==============================================================
+-- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+-- ==============================================================
+CREATE OR ALTER FUNCTION [CronStep] (@expression VARCHAR(20))
+RETURNS INT
+AS
+BEGIN
+    DECLARE @step INT = NULL, @default INT = 1;
+
+    DECLARE @slashPos int = CHARINDEX(''/'', @expression);
+    IF @slashPos > 0 SET @step = TRY_CAST(SUBSTRING(@expression, @slashPos + 1, LEN(@expression)) AS INT);
+
+    RETURN IIF(@step > @default, @step, @default);
 END
 ';
 
@@ -157,7 +161,7 @@ AS
 BEGIN
     IF @Expression LIKE ''%[A-Za-z]%''
     BEGIN
-        SET @Expression = UPPER(@Expression);
+        SET @Expression = UPPER(@Expression);    
 
 		;WITH Map AS (
 			SELECT *
@@ -175,15 +179,15 @@ BEGIN
 
     IF @Expression LIKE ''%[^0-9*,/ -]%'' RETURN 0
 
-    IF dbo.CronValidatePart(dbo.CronWord(@Expression, '' '', 1), DATEPART(MINUTE, @Now), 0, 59) = 0 RETURN 0;
+    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 1), DATEPART(MINUTE, @Now), 0, 59) = 0 RETURN 0;
 
-    IF dbo.CronValidatePart(dbo.CronWord(@Expression, '' '', 2), DATEPART(HOUR, @Now), 0, 23) = 0 RETURN 0;
+    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 2), DATEPART(HOUR, @Now), 0, 23) = 0 RETURN 0;
 
-    IF dbo.CronValidatePart(dbo.CronWord(@Expression, '' '', 3), DATEPART(DAY, @Now), 1, 31) = 0 RETURN 0;
+    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 3), DATEPART(DAY, @Now), 1, 31) = 0 RETURN 0;
 
-    IF dbo.CronValidatePart(dbo.CronWord(@Expression, '' '', 4), DATEPART(MONTH, @Now), 1, 12) = 0 RETURN 0;
+    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 4), DATEPART(MONTH, @Now), 1, 12) = 0 RETURN 0;
 
-    IF dbo.CronValidatePart(dbo.CronWord(@Expression, '' '', 5), dbo.CronWeekDay(@Now), 0, 6) = 0 RETURN 0;
+    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 5), dbo.CronWeekDay(@Now), 0, 6) = 0 RETURN 0;
 
     RETURN 1
 END
@@ -197,18 +201,45 @@ CREATE OR ALTER FUNCTION [CronValidatePart](@Expression varchar(100), @Value int
 RETURNS tinyint
 AS
 BEGIN
-    IF @Expression LIKE ''%[^0-9*,/-]%'' RETURN 0
-    IF @Value IS NULL OR @Min IS NULL OR @Max IS NULL OR NOT @Value BETWEEN @Min AND @Max RETURN 0  
-
     IF @Expression = ''*'' RETURN 1
 
-	DECLARE @AllValues varchar(200) = (SELECT STRING_AGG([dbo].[CronPartValues](value, @Min, @Max, 1), '','') 
-        FROM STRING_SPLIT(@Expression, '','') 
-        WHERE LEN(value) > 0);
+    IF CHARINDEX(''-'', @Expression, 0) > 0 OR CHARINDEX(''/'', @Expression, 0) > 0 BEGIN 
+        DECLARE @Current int = dbo.CronMin(@Expression, @Min);
+        DECLARE @ExpMax int  = dbo.CronMax(@Expression, @Max);
+        DECLARE @ExpStep int = dbo.CronStep(@Expression);
 
-    IF CHARINDEX('','' + CAST(@Value as varchar) + '','', '','' + ISNULL(@AllValues, '''') + '','') > 0 RETURN 1
+        WHILE @Current <= @ExpMax
+        BEGIN
+            IF @Current = @Value RETURN 1
+            SET @Current += @ExpStep;
+        END
+    END
+    ELSE IF TRY_CAST(@Expression as int) = @Value 
+        RETURN 1
 
     RETURN 0
+END
+';
+
+EXEC dbo.sp_executesql @statement = N'
+-- ==============================================================
+-- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
+-- ==============================================================
+CREATE OR ALTER FUNCTION [CronValidateParts](@Expression varchar(100), @Value int, @Min int, @Max int)
+RETURNS tinyint
+AS
+BEGIN
+    IF @Value IS NULL OR @Min IS NULL OR @Max IS NULL OR NOT @Value BETWEEN @Min AND @Max RETURN 0  
+
+    DECLARE @PosComma int = CHARINDEX('','', @Expression) 
+    WHILE @PosComma > 0 OR LEN(@Expression) > 0
+    BEGIN
+        IF dbo.CronValidatePart(IIF(@PosComma > 0, LEFT(@Expression, @PosComma - 1), @Expression), @Value, @Min, @Max) = 1 RETURN 1;
+
+        SET @Expression = IIF(@PosComma > 0, SUBSTRING(@Expression, @PosComma + 1, LEN(@Expression)), '''');
+        SET @PosComma = CHARINDEX('','', @Expression);
+    END
+    RETURN 0;
 END
 ';
 
