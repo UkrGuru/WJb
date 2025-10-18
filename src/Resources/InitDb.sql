@@ -92,69 +92,6 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronMax] (@expression VARCHAR(20), @default INT)
-RETURNS INT
-AS
-BEGIN
-    DECLARE @max INT = NULL;
-
-    DECLARE @slashPos int = CHARINDEX(''/'', @expression);
-    IF @slashPos > 0 SET @expression = LEFT(@expression, @slashPos - 1)
-
-    DECLARE @dashPos int = CHARINDEX(''-'', @expression)
-    SET @max = IIF(@dashPos > 0, TRY_CAST(SUBSTRING(@expression, @dashPos + 1, LEN(@expression)) AS INT), @default);
-
-    RETURN IIF(@max < @default, @max, @default);
-END
-';
-
-EXEC dbo.sp_executesql @statement = N'
--- ==============================================================
--- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
--- ==============================================================
-CREATE OR ALTER FUNCTION [CronMin] (@expression VARCHAR(20), @default INT)
-RETURNS INT
-AS
-BEGIN
-    DECLARE @min INT = NULL;
-
-    DECLARE @dashPos int = CHARINDEX(''-'', @expression)
-    IF @dashPos > 0
-        SET @min = TRY_CAST(LEFT(@expression, @dashPos - 1) AS INT);
-    ELSE 
-    BEGIN
-        DECLARE @slashPos int = CHARINDEX(''/'', @expression);
-        IF @slashPos > 0
-            SET @min = TRY_CAST(LEFT(@expression, @slashPos - 1) AS INT);
-        ELSE
-            SET @min = TRY_CAST(@expression AS INT);
-    END
-
-    RETURN IIF(@min > @default, @min, @default);
-END
-';
-
-EXEC dbo.sp_executesql @statement = N'
--- ==============================================================
--- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
--- ==============================================================
-CREATE OR ALTER FUNCTION [CronStep] (@expression VARCHAR(20))
-RETURNS INT
-AS
-BEGIN
-    DECLARE @step INT = NULL, @default INT = 1;
-
-    DECLARE @slashPos int = CHARINDEX(''/'', @expression);
-    IF @slashPos > 0 SET @step = TRY_CAST(SUBSTRING(@expression, @slashPos + 1, LEN(@expression)) AS INT);
-
-    RETURN IIF(@step > @default, @step, @default);
-END
-';
-
-EXEC dbo.sp_executesql @statement = N'
--- ==============================================================
--- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
--- ==============================================================
 CREATE OR ALTER FUNCTION [CronValidate] (@Expression varchar(100), @Now datetime)
 RETURNS bit
 AS
@@ -179,15 +116,15 @@ BEGIN
 
     IF @Expression LIKE ''%[^0-9*,/ -]%'' RETURN 0
 
-    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 1), DATEPART(MINUTE, @Now), 0, 59) = 0 RETURN 0;
+    IF dbo.CronValidateWord(dbo.CronWord(@Expression, '' '', 1), DATEPART(MINUTE, @Now), 0, 59) = 0 RETURN 0;
 
-    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 2), DATEPART(HOUR, @Now), 0, 23) = 0 RETURN 0;
+    IF dbo.CronValidateWord(dbo.CronWord(@Expression, '' '', 2), DATEPART(HOUR, @Now), 0, 23) = 0 RETURN 0;
 
-    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 3), DATEPART(DAY, @Now), 1, 31) = 0 RETURN 0;
+    IF dbo.CronValidateWord(dbo.CronWord(@Expression, '' '', 3), DATEPART(DAY, @Now), 1, 31) = 0 RETURN 0;
 
-    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 4), DATEPART(MONTH, @Now), 1, 12) = 0 RETURN 0;
+    IF dbo.CronValidateWord(dbo.CronWord(@Expression, '' '', 4), DATEPART(MONTH, @Now), 1, 12) = 0 RETURN 0;
 
-    IF dbo.CronValidateParts(dbo.CronWord(@Expression, '' '', 5), dbo.CronWeekDay(@Now), 0, 6) = 0 RETURN 0;
+    IF dbo.CronValidateWord(dbo.CronWord(@Expression, '' '', 5), dbo.CronWeekDay(@Now), 0, 6) = 0 RETURN 0;
 
     RETURN 1
 END
@@ -197,48 +134,53 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronValidatePart](@Expression varchar(100), @Value int, @Min int, @Max int)
+CREATE OR ALTER FUNCTION [CronValidateWord](@parts varchar(100), @value int, @min int, @max int)
 RETURNS tinyint
 AS
 BEGIN
-    IF @Expression = ''*'' RETURN 1
+    IF @value IS NULL OR @min IS NULL OR @max IS NULL OR NOT @value BETWEEN @min AND @max RETURN 0  
 
-    IF CHARINDEX(''-'', @Expression, 0) > 0 OR CHARINDEX(''/'', @Expression, 0) > 0 BEGIN 
-        DECLARE @Current int = dbo.CronMin(@Expression, @Min);
-        DECLARE @ExpMax int  = dbo.CronMax(@Expression, @Max);
-        DECLARE @ExpStep int = dbo.CronStep(@Expression);
-
-        WHILE @Current <= @ExpMax
-        BEGIN
-            IF @Current = @Value RETURN 1
-            SET @Current += @ExpStep;
-        END
-    END
-    ELSE IF TRY_CAST(@Expression as int) = @Value 
-        RETURN 1
-
-    RETURN 0
-END
-';
-
-EXEC dbo.sp_executesql @statement = N'
--- ==============================================================
--- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
--- ==============================================================
-CREATE OR ALTER FUNCTION [CronValidateParts](@Expression varchar(100), @Value int, @Min int, @Max int)
-RETURNS tinyint
-AS
-BEGIN
-    IF @Value IS NULL OR @Min IS NULL OR @Max IS NULL OR NOT @Value BETWEEN @Min AND @Max RETURN 0  
-
-    DECLARE @PosComma int = CHARINDEX('','', @Expression) 
-    WHILE @PosComma > 0 OR LEN(@Expression) > 0
+    DECLARE @cmmaPos int = CHARINDEX('','', @parts), @part varchar(100) = NULL;
+    WHILE @cmmaPos > 0 OR LEN(@parts) > 0
     BEGIN
-        IF dbo.CronValidatePart(IIF(@PosComma > 0, LEFT(@Expression, @PosComma - 1), @Expression), @Value, @Min, @Max) = 1 RETURN 1;
+        SET @part = IIF(@cmmaPos > 0, LEFT(@parts, @cmmaPos - 1), @parts);
 
-        SET @Expression = IIF(@PosComma > 0, SUBSTRING(@Expression, @PosComma + 1, LEN(@Expression)), '''');
-        SET @PosComma = CHARINDEX('','', @Expression);
+        IF @part = ''*'' RETURN 1;
+
+        DECLARE @step INT = NULL, @start INT = NULL, @end INT = NULL;
+
+        -- @step calculation, all drop after slash in @part
+        DECLARE @slashPos int = CHARINDEX(''/'', @part);
+        IF @slashPos > 0 BEGIN
+            SET @step = TRY_CAST(SUBSTRING(@part, @slashPos + 1, LEN(@part)) AS INT);
+            SET @part = LEFT(@part, @slashPos - 1)
+        END
+        SET @step = IIF(@step > 1, @step, 1);
+
+        -- @start and @end calculation
+        DECLARE @dashPos int = CHARINDEX(''-'', @part)
+        IF @dashPos > 0 OR @slashPos > 0 BEGIN
+            SET @start = IIF(@dashPos > 0, TRY_CAST(LEFT(@part, @dashPos - 1) AS INT), TRY_CAST(@part AS INT));
+            SET @start = IIF(@start > @min, @start, @min);
+
+            SET @end = IIF(@dashPos > 0, TRY_CAST(SUBSTRING(@part, @dashPos + 1, LEN(@part)) AS INT), @max);
+            SET @end = IIF(@end < @max, @end, @max);
+
+            -- and final search
+            DECLARE @i int = @start;
+            WHILE @i <= @end
+            BEGIN
+                IF @i = @value RETURN 1;
+                SET @i += @step;
+            END
+        END 
+        ELSE IF TRY_CAST(@part AS INT) = @value 
+            RETURN 1;
+
+        SET @parts = IIF(@cmmaPos > 0, SUBSTRING(@parts, @cmmaPos + 1, LEN(@parts)), '''');
+        SET @cmmaPos = CHARINDEX('','', @parts);
     END
+
     RETURN 0;
 END
 ';
