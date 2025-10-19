@@ -134,7 +134,7 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronValidateWord](@parts varchar(100), @value int, @min int, @max int)
+CREATE OR ALTER FUNCTION [dbo].[CronValidateWord](@parts varchar(100), @value int, @min int, @max int)
 RETURNS tinyint
 AS
 BEGIN
@@ -161,9 +161,11 @@ BEGIN
         DECLARE @dashPos int = CHARINDEX(''-'', @part)
         IF @dashPos > 0 OR @slashPos > 0 BEGIN
             SET @start = IIF(@dashPos > 0, TRY_CAST(LEFT(@part, @dashPos - 1) AS INT), TRY_CAST(@part AS INT));
+            IF @start IS NULL OR NOT @start BETWEEN @min AND @max RETURN 0
             SET @start = IIF(@start > @min, @start, @min);
 
             SET @end = IIF(@dashPos > 0, TRY_CAST(SUBSTRING(@part, @dashPos + 1, LEN(@part)) AS INT), @max);
+            IF @end IS NULL OR NOT @end BETWEEN @min AND @max RETURN 0
             SET @end = IIF(@end < @max, @end, @max);
 
             -- and final search
