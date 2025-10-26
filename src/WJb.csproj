@@ -1,26 +1,66 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>UkrGuru.WJb</AssemblyName>
+        <RootNamespace>UkrGuru.WJb</RootNamespace>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <SignAssembly>True</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\..\UkrGuru.snk</AssemblyOriginatorKeyFile>
+        <Company>PE VIKTOR Oleksandr Oleksandrovych</Company>
+        <Authors>UkrGuru</Authors>
+        <Copyright>Oleksandr Viktor (UkrGuru)</Copyright>
+        <PackageProjectUrl>https://www.nuget.org/packages/UkrGuru.WJb</PackageProjectUrl>
+        <Version>0.1.4</Version>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageIcon>ukrguru-logo.jpg</PackageIcon>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Description>UkrGuru.WJb is a background job processing library for .NET applications using SQL Server.</Description>
+        <RepositoryUrl>https://github.com/UkrGuru/WJb</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReleaseNotes>Initial release with SQL-based job queue and hosted service integration.</PackageReleaseNotes>
+        <PackageTags>jobs;background;sql;dotnet;queue</PackageTags>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <AssemblyName>UkrGuru.WJb</AssemblyName>
-    <RootNamespace>UkrGuru.WJb</RootNamespace>
-  </PropertyGroup>
+    <PropertyGroup>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <DebugType>embedded</DebugType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <EnableSourceLink>true</EnableSourceLink>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Resources\**" />
-    <EmbeddedResource Remove="Resources\**" />
-    <None Remove="Resources\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="..\LICENSE">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\ukrguru-logo.jpg">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </EmbeddedResource>
+        <EmbeddedResource Include="..\README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </EmbeddedResource>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\InitDb.sql" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="Resources\**" />
+        <EmbeddedResource Remove="Resources\**" />
+        <None Remove="Resources\**" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.9" />
-    <PackageReference Include="UkrGuru.Sql" Version="1.5.9" />
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="Resources\InitDb.sql" />
+    </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.10" />
+        <PackageReference Include="UkrGuru.Sql" Version="1.8.10" />
+    </ItemGroup>
 </Project>

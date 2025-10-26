@@ -3,9 +3,9 @@
 
 namespace UkrGuru.WJb.SqlQueries;
 
-internal static class WJbQueue
+public static class WJbQueue
 {
-    internal const string Ins_Cron = """
+    public static readonly string Ins_Cron = """
         DECLARE @Now smalldatetime = GETDATE();
         INSERT INTO WJbQueue (RuleId, JobPriority, JobStatus)
         SELECT RuleId, RulePriority, 1 JobStatus    -- Queued
@@ -14,9 +14,9 @@ internal static class WJbQueue
         AND dbo.CronValidate(JSON_VALUE(RuleMore, '$.cron'), @Now) = 1
         """;
 
-    internal const string Start = """
+    public static readonly string Start = """
         ;WITH cte AS (
-            SELECT TOP (1) JobId
+            SELECT TOP (1) JobId, Started, JobStatus
             FROM WJbQueue
             WHERE Started IS NULL
             ORDER BY JobPriority ASC, JobId ASC
@@ -26,8 +26,8 @@ internal static class WJbQueue
         OUTPUT inserted.JobId;
         """;
 
-    internal const string Finish = """
-        DELETE FROM WJbQueue (JobId, JobPriority, Created, RuleId, Started, Finished, JobMore, JobStatus)        
+    public static readonly string Finish = """
+        DELETE FROM WJbQueue
         OUTPUT 
             deleted.JobId,
             deleted.JobPriority,
@@ -38,10 +38,25 @@ internal static class WJbQueue
             deleted.JobMore,
             @JobStatus AS JobStatus
         INTO WJbHistory
-        WHERE JobId = @JobId AND Started IS NOT NULL;
+        WHERE JobId = @JobId;
         """;
 
-    internal const string Get = """
+    public static readonly string Finish_All = """
+        DELETE FROM WJbQueue
+        OUTPUT 
+            deleted.JobId,
+            deleted.JobPriority,
+            deleted.Created,
+            deleted.RuleId,
+            deleted.Started,
+            GETDATE() AS Finished,
+            deleted.JobMore,
+            5 JobStatus     -- Cancelled
+        INTO WJbHistory
+        WHERE Started IS NOT NULL;
+        """;
+    
+    public static readonly string Get = """
         SELECT TOP (1) 
             Q.JobId, Q.JobPriority, Q.Created, Q.RuleId, Q.Started, Q.Finished, Q.JobMore, Q.JobStatus,
             R.RuleName, R.RuleMore, 

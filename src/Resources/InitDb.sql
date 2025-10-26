@@ -1,9 +1,9 @@
 BEGIN /***** Init Tables *****/
 
 BEGIN /*** Init WJbActions ***/
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[WJbActions]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbActions]') AND type in (N'U'))
 BEGIN
-	CREATE TABLE [WJbActions] (
+	CREATE TABLE [dbo].[WJbActions] (
 		[ActionId] [int] IDENTITY(1000,1) NOT NULL,
 		[ActionName] [nvarchar](100) NOT NULL,
 		[ActionType] [nvarchar](255) NOT NULL,
@@ -12,16 +12,16 @@ BEGIN
 		CONSTRAINT [PK_WJbActions] PRIMARY KEY CLUSTERED ([ActionId] ASC),
 		CONSTRAINT [UX_WJbActions_ActionName] UNIQUE NONCLUSTERED ([ActionName] ASC),
 		CONSTRAINT [CK_WJbActions_ActionMore_ValidJson] CHECK ([ActionMore] IS NULL  OR isjson([ActionMore]) = (1) OR TRY_CAST([ActionMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
-	) ON [PRIMARY]
+	) ON [PRIMARY];
 
     --CREATE NONCLUSTERED INDEX IX_WJbActions_EnabledOnly ON WJbActions(ActionName) WHERE Disabled = 0;
 END
 END
 
 BEGIN /*** Init WJbRules ***/
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[WJbRules]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbRules]') AND type in (N'U'))
 BEGIN
-	CREATE TABLE [WJbRules] (
+	CREATE TABLE [dbo].[WJbRules] (
 		[RuleId] [int] IDENTITY(1000,1) NOT NULL,
 		[RuleName] [nvarchar](100) NOT NULL,
 		[Disabled] [bit] NOT NULL DEFAULT (0),
@@ -32,7 +32,7 @@ BEGIN
 	 CONSTRAINT [UX_WJbRules_RuleName] UNIQUE NONCLUSTERED ([RuleName] ASC),
 	 CONSTRAINT [FK_WJbRules_WJbActions] FOREIGN KEY([ActionId]) REFERENCES [dbo].[WJbActions] ([ActionId]),
 	 CONSTRAINT [CK_WJbRules_RuleMore_ValidJson] CHECK ([RuleMore] IS NULL OR isjson([RuleMore]) = (1) OR TRY_CAST([RuleMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
-	) ON [PRIMARY]
+	) ON [PRIMARY];
 	
     CREATE NONCLUSTERED INDEX IX_WJbRules_ActionId ON WJbRules(ActionId);
 
@@ -41,9 +41,9 @@ END
 END
 
 BEGIN /*** Init WJbQueue ***/
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[WJbQueue]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbQueue]') AND type in (N'U'))
 BEGIN
-    CREATE TABLE [WJbQueue](
+    CREATE TABLE [dbo].[WJbQueue](
         [JobId] [int] IDENTITY(1,1) NOT NULL,
         [JobPriority] [tinyint] NOT NULL DEFAULT (2),
         [Created] [datetime] NOT NULL DEFAULT (GETDATE()),
@@ -53,17 +53,17 @@ BEGIN
         [JobMore] [nvarchar](2000) NULL,
         [JobStatus] [tinyint] NOT NULL DEFAULT (0),
         CONSTRAINT [PK_WJbQueue] PRIMARY KEY CLUSTERED ([JobId] ASC),
-        CONSTRAINT [FK_WJbQueue_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [WJbRules] ([RuleId]),
+        CONSTRAINT [FK_WJbQueue_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [dbo].[WJbRules] ([RuleId]),
         CONSTRAINT [CK_WJbQueue_JobStatus] CHECK ([JobStatus] IN (0, 1, 2, 3, 4, 5)),
         CONSTRAINT [CK_WJbQueue_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1) OR TRY_CAST([JobMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
-    ) ON [PRIMARY]
+    ) ON [PRIMARY];
 END
 END
 
 BEGIN /*** Init WJbHistory ***/
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[WJbHistory]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbHistory]') AND type in (N'U'))
 BEGIN
-	CREATE TABLE [WJbHistory](
+	CREATE TABLE [dbo].[WJbHistory](
 		[JobId] [int] NOT NULL,
 		[JobPriority] [tinyint] NOT NULL,
 		[Created] [datetime] NOT NULL,
@@ -73,14 +73,25 @@ BEGIN
 		[JobMore] [nvarchar](2000) NULL,
 		[JobStatus] [tinyint] NOT NULL,
 		CONSTRAINT [PK_WJbHistory] PRIMARY KEY CLUSTERED ([JobId] DESC),
-		CONSTRAINT [FK_WJbHistory_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [WJbRules] ([RuleId]),
+		CONSTRAINT [FK_WJbHistory_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [dbo].[WJbRules] ([RuleId]),
 		CONSTRAINT [CK_WJbHistory_JobStatus] CHECK ([JobStatus] IN (0, 1, 2, 3, 4, 5)),
 		CONSTRAINT [CK_WJbHistory_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1) OR TRY_CAST([JobMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
-	) ON [PRIMARY]
+	) ON [PRIMARY];
 
-	CREATE NONCLUSTERED INDEX [IX_WJbHistory_RuleId] ON [WJbHistory] ([RuleId] ASC)
+	CREATE NONCLUSTERED INDEX [IX_WJbHistory_RuleId] ON [dbo].[WJbHistory] ([RuleId] ASC);
 
-	CREATE NONCLUSTERED INDEX [IX_WJbHistory_CreatedDesc] ON [WJbHistory] ([Created] DESC)
+	CREATE NONCLUSTERED INDEX [IX_WJbHistory_CreatedDesc] ON [dbo].[WJbHistory] ([Created] DESC);
+END
+END
+
+BEGIN /*** Init WJbSettings ***/
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbSettings]') AND type in (N'U'))
+BEGIN
+    CREATE TABLE [dbo].[WJbSettings](
+        [Name] [nvarchar](100) NOT NULL,
+        [Value] [nvarchar](max) NULL,
+        CONSTRAINT [PK_WJbSettings] PRIMARY KEY CLUSTERED ([Name] ASC)
+    ) ON [PRIMARY];
 END
 END
 
@@ -92,7 +103,7 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronValidate] (@Expression varchar(100), @Now datetime)
+CREATE OR ALTER FUNCTION [dbo].[CronValidate] (@Expression varchar(100), @Now datetime)
 RETURNS bit
 AS
 BEGIN
@@ -191,7 +202,7 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronWeekDay](@Now datetime)
+CREATE OR ALTER FUNCTION [dbo].[CronWeekDay](@Now datetime)
 RETURNS int
 AS
 BEGIN
@@ -203,7 +214,7 @@ EXEC dbo.sp_executesql @statement = N'
 -- ==============================================================
 -- Copyright (c) Oleksandr Viktor (UkrGuru). All rights reserved.
 -- ==============================================================
-CREATE OR ALTER FUNCTION [CronWord] (@Words VARCHAR(100), @Separator VARCHAR(1), @Index INT)
+CREATE OR ALTER FUNCTION [dbo].[CronWord] (@Words VARCHAR(100), @Separator VARCHAR(1), @Index INT)
 RETURNS VARCHAR(100)
 AS
 BEGIN
