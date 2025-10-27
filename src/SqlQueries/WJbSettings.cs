@@ -7,7 +7,7 @@ public static class WJbSettings
 {
     public static readonly string Get = """
         SELECT TOP (1) [Value]
-        FROM WJbSettings
+        FROM dbo.WJbSettings
         WHERE [Name] = @Data
         """;
 }

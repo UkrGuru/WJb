@@ -12,7 +12,7 @@ public static class WJbQueue
             WHERE Disabled = 0
         )
         INSERT INTO dbo.WJbQueue (RuleId, JobPriority, JobStatus)
-        SELECT RuleId, RulePriority, 1
+        SELECT RuleId, RulePriority, 1  -- Queue
         FROM ValidRules
         WHERE dbo.CronValidate(CronExpr, GETDATE()) = 1
         """;
