@@ -86,5 +86,6 @@ public static class WJbQueue
         INNER JOIN dbo.WJbRules R ON Q.RuleId = R.RuleId 
         INNER JOIN dbo.WJbActions A ON R.ActionId = A.ActionId
         WHERE Q.JobId = @Data
+        FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
         """;
 }
