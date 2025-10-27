@@ -85,7 +85,7 @@ public class Worker(IConfiguration config, ILogger<Worker> logger, IDbService db
     }
 
     public virtual async Task<int> StartJobAsync(CancellationToken stoppingToken)
-        => await _db.ExecAsync<int>(WJbQueue.Start, cancellationToken: stoppingToken);
+        => await _db.ExecAsync<int>(WJbQueue.Start1st, cancellationToken: stoppingToken);
 
     public virtual async Task<bool> ProcessJobAsync(int jobId, CancellationToken stoppingToken)
     {

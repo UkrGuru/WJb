@@ -1,10 +1,10 @@
 BEGIN /***** Init Tables *****/
 
-BEGIN /*** Init WJbActions ***/
+BEGIN /*** Init dbo.WJbActions ***/
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbActions]') AND type in (N'U'))
 BEGIN
 	CREATE TABLE [dbo].[WJbActions] (
-		[ActionId] [int] IDENTITY(1000,1) NOT NULL,
+		[ActionId] [int] IDENTITY(1,1) NOT NULL,
 		[ActionName] [nvarchar](100) NOT NULL,
 		[ActionType] [nvarchar](255) NOT NULL,
 		[ActionMore] [nvarchar](2000) NULL,
@@ -14,7 +14,7 @@ BEGIN
 		CONSTRAINT [CK_WJbActions_ActionMore_ValidJson] CHECK ([ActionMore] IS NULL  OR isjson([ActionMore]) = (1) OR TRY_CAST([ActionMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
 	) ON [PRIMARY];
 
-    --CREATE NONCLUSTERED INDEX IX_WJbActions_EnabledOnly ON WJbActions(ActionName) WHERE Disabled = 0;
+    --CREATE NONCLUSTERED INDEX IX_WJbActions_EnabledOnly ON dbo.WJbActions(ActionName) WHERE Disabled = 0;
 END
 END
 
@@ -22,7 +22,7 @@ BEGIN /*** Init WJbRules ***/
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[WJbRules]') AND type in (N'U'))
 BEGIN
 	CREATE TABLE [dbo].[WJbRules] (
-		[RuleId] [int] IDENTITY(1000,1) NOT NULL,
+		[RuleId] [int] IDENTITY(1,1) NOT NULL,
 		[RuleName] [nvarchar](100) NOT NULL,
 		[Disabled] [bit] NOT NULL DEFAULT (0),
 		[ActionId] [int] NOT NULL,
@@ -34,9 +34,9 @@ BEGIN
 	 CONSTRAINT [CK_WJbRules_RuleMore_ValidJson] CHECK ([RuleMore] IS NULL OR isjson([RuleMore]) = (1) OR TRY_CAST([RuleMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
 	) ON [PRIMARY];
 	
-    CREATE NONCLUSTERED INDEX IX_WJbRules_ActionId ON WJbRules(ActionId);
+    CREATE NONCLUSTERED INDEX IX_WJbRules_ActionId ON dbo.WJbRules(ActionId);
 
-    --CREATE NONCLUSTERED INDEX IX_WJbRules_RulePriority ON WJbRules(RulePriority);
+    --CREATE NONCLUSTERED INDEX IX_WJbRules_RulePriority ON dbo.WJbRules(RulePriority);
 END
 END
 
@@ -73,9 +73,7 @@ BEGIN
 		[JobMore] [nvarchar](2000) NULL,
 		[JobStatus] [tinyint] NOT NULL,
 		CONSTRAINT [PK_WJbHistory] PRIMARY KEY CLUSTERED ([JobId] DESC),
-		CONSTRAINT [FK_WJbHistory_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [dbo].[WJbRules] ([RuleId]),
-		CONSTRAINT [CK_WJbHistory_JobStatus] CHECK ([JobStatus] IN (0, 1, 2, 3, 4, 5)),
-		CONSTRAINT [CK_WJbHistory_JobMore_ValidJson] CHECK ([JobMore] IS NULL OR isjson([JobMore]) = (1) OR TRY_CAST([JobMore] AS UNIQUEIDENTIFIER) IS NOT NULL)
+		CONSTRAINT [FK_WJbHistory_WJbRules] FOREIGN KEY ([RuleId]) REFERENCES [dbo].[WJbRules] ([RuleId])
 	) ON [PRIMARY];
 
 	CREATE NONCLUSTERED INDEX [IX_WJbHistory_RuleId] ON [dbo].[WJbHistory] ([RuleId] ASC);

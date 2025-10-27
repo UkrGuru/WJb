@@ -6,28 +6,31 @@ namespace UkrGuru.WJb.SqlQueries;
 public static class WJbQueue
 {
     public static readonly string Ins_Cron = """
-        DECLARE @Now smalldatetime = GETDATE();
-        INSERT INTO WJbQueue (RuleId, JobPriority, JobStatus)
-        SELECT RuleId, RulePriority, 1 JobStatus    -- Queued
-        FROM WJbRules
-        WHERE Disabled = 0 
-        AND dbo.CronValidate(JSON_VALUE(RuleMore, '$.cron'), @Now) = 1
+        ;WITH ValidRules AS (
+            SELECT RuleId, RulePriority, JSON_VALUE(RuleMore, '$.cron') AS CronExpr
+            FROM dbo.WJbRules
+            WHERE Disabled = 0
+        )
+        INSERT INTO dbo.WJbQueue (RuleId, JobPriority, JobStatus)
+        SELECT RuleId, RulePriority, 1
+        FROM ValidRules
+        WHERE dbo.CronValidate(CronExpr, GETDATE()) = 1
         """;
 
-    public static readonly string Start = """
+    public static readonly string Start1st = """
         ;WITH cte AS (
             SELECT TOP (1) JobId, Started, JobStatus
-            FROM WJbQueue
+            FROM dbo.WJbQueue
             WHERE Started IS NULL
             ORDER BY JobPriority ASC, JobId ASC
         )
         UPDATE cte
-        SET Started = GETDATE(), JobStatus = 2      -- Running
+        SET Started = GETDATE(), JobStatus = 2  -- Running
         OUTPUT inserted.JobId;
         """;
 
     public static readonly string Finish = """
-        DELETE FROM WJbQueue
+        DELETE FROM dbo.WJbQueue
         OUTPUT 
             deleted.JobId,
             deleted.JobPriority,
@@ -37,12 +40,21 @@ public static class WJbQueue
             GETDATE() AS Finished,
             deleted.JobMore,
             @JobStatus AS JobStatus
-        INTO WJbHistory
+        INTO dbo.WJbHistory (
+            JobId,
+            JobPriority,
+            Created,
+            RuleId,
+            Started,
+            Finished,
+            JobMore,
+            JobStatus
+        )
         WHERE JobId = @JobId;
         """;
 
     public static readonly string Finish_All = """
-        DELETE FROM WJbQueue
+        DELETE FROM dbo.WJbQueue
         OUTPUT 
             deleted.JobId,
             deleted.JobPriority,
@@ -52,7 +64,16 @@ public static class WJbQueue
             GETDATE() AS Finished,
             deleted.JobMore,
             5 JobStatus     -- Cancelled
-        INTO WJbHistory
+        INTO dbo.WJbHistory (
+            JobId,
+            JobPriority,
+            Created,
+            RuleId,
+            Started,
+            Finished,
+            JobMore,
+            JobStatus
+        )
         WHERE Started IS NOT NULL;
         """;
     
@@ -61,9 +82,9 @@ public static class WJbQueue
             Q.JobId, Q.JobPriority, Q.Created, Q.RuleId, Q.Started, Q.Finished, Q.JobMore, Q.JobStatus,
             R.RuleName, R.RuleMore, 
             A.ActionName, A.ActionType, A.ActionMore
-        FROM WJbQueue Q
-        INNER JOIN WJbRules R ON Q.RuleId = R.RuleId 
-        INNER JOIN WJbActions A ON R.ActionId = A.ActionId
+        FROM dbo.WJbQueue Q
+        INNER JOIN dbo.WJbRules R ON Q.RuleId = R.RuleId 
+        INNER JOIN dbo.WJbActions A ON R.ActionId = A.ActionId
         WHERE Q.JobId = @Data
         """;
 }
