@@ -25,19 +25,24 @@ public class Scheduler(IConfiguration config, ILogger<Scheduler> logger, IDbServ
         {
             try
             {
-                int millisecondsDelay = CalcDelay(DateTime.Now);
-
-                await Task.Delay(millisecondsDelay, stoppingToken);
-
-                await CreateJobsAsync(stoppingToken);
+                await DoWorkAsync(DateTime.Now, stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{AppName} Scheduler.CreateJobsAsync crashed.", AppName);
+                _logger.LogError(ex, "{AppName} Scheduler.DoWorkAsync crashed.", AppName);
             }
         }
 
         _logger.LogInformation("{AppName} Scheduler stopped.", AppName);
+    }
+
+    public virtual async Task DoWorkAsync(DateTime now, CancellationToken stoppingToken)
+    {
+        int millisecondsDelay = CalcDelay(now);
+
+        await Task.Delay(millisecondsDelay, stoppingToken);
+
+        await CreateJobsAsync(stoppingToken);
     }
 
     public virtual int CalcDelay(DateTime now) => 60000 - now.Second * 1000 - now.Millisecond + 25;

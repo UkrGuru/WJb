@@ -21,7 +21,7 @@
         <RepositoryUrl>https://github.com/UkrGuru/WJb</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReleaseNotes>Initial release with SQL-based job queue and hosted service integration.</PackageReleaseNotes>
-        <PackageTags>jobs;background;sql;dotnet;queue</PackageTags>
+        <PackageTags>scheduler;cron;queue;worker;background;jobs;sql;dotnet</PackageTags>
     </PropertyGroup>
 
     <PropertyGroup>
