@@ -10,9 +10,9 @@ It focuses on one thing: **structured background job processing without heavy fr
 ## Requirements
 
 - **Target framework:** .NET 10+
-- **API contract:** v0.100 (frozen)
+- **API contract:** v0.25 (frozen)
 
-See: docs/api-v0.100.md
+See: docs/api-v0.25.md
 
 ---
 

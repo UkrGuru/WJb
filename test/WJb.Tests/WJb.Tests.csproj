@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\WJb.Contracts\WJb.Contracts.csproj" />
     <ProjectReference Include="..\..\src\WJb\WJb.csproj" />
   </ItemGroup>
 

@@ -12,7 +12,7 @@
         <Authors>UkrGuru</Authors>
         <Copyright>PE VIKTOR Oleksandr Oleksandrovych</Copyright>
         <PackageProjectUrl>https://github.com/UkrGuru/WJb</PackageProjectUrl>
-        <Version>0.25.0</Version>
+        <Version>0.25.0-beta.3</Version>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageIcon>ukrguru-logo.jpg</PackageIcon>
@@ -21,8 +21,8 @@
         <RepositoryUrl>https://github.com/UkrGuru/WJb</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageReleaseNotes>
-            v0.100.0
-            - Initial public API contract frozen (api-v0.100)
+            v0.25.0
+            - Initial public API contract frozen (api-v0.25.0)
             - Core job execution, priority, delayed jobs, and chaining supported
             - Samples aligned with production semantics
         </PackageReleaseNotes>
@@ -61,9 +61,6 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.5" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\WJb.Contracts\WJb.Contracts.csproj" />
     </ItemGroup>
     <ItemGroup>
         <Using Include="System" />

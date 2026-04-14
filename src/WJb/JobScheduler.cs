@@ -33,11 +33,11 @@ public sealed class JobScheduler(
 
                     foreach (var (code, item) in due)
                     {
-                        var job = await _jobProcessor.CompactAsync(code, null, stoppingToken);
-                        await _jobQueue.EnqueueAsync(job, item.More.GetPriority(), stoppingToken);
+                        var job = await _jobProcessor.CompactAsync(code, null, stoppingToken).ConfigureAwait(false);
+                        await _jobQueue.EnqueueAsync(job, item.More.GetPriority(), stoppingToken).ConfigureAwait(false);
                     }
 
-                    await IntervalDelayAsync(DateTime.Now, stoppingToken);
+                    await IntervalDelayAsync(DateTime.Now, stoppingToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

@@ -1,4 +1,3 @@
 <Solution>
-  <Project Path="src/WJb.Contracts/WJb.Contracts.csproj" />
   <Project Path="src/WJb/WJb.csproj" />
 </Solution>

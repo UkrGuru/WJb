@@ -7,6 +7,19 @@ namespace WJb.Extensions;
 
 public static class WJbExtensions
 {
+    public static IServiceCollection AddWJb(
+        this IServiceCollection services,
+        IDictionary<string, ActionItem>? actions = null,
+        bool addActionFactory = true,
+        bool addProcessor = true,
+        bool addScheduler = false,
+        bool addHostedServices = true)
+    {
+        services.AddWJbActions(actions, addActionFactory);
+        services.AddWJbRuntime(addProcessor, addScheduler, addHostedServices);
+        return services;
+    }
+
     public static IServiceCollection AddWJbActions(
         this IServiceCollection services,
         IDictionary<string, ActionItem>? actions = null,
@@ -47,7 +60,6 @@ public static class WJbExtensions
 
         return services;
     }
-
 
     public static IServiceCollection AddWJbRuntime(
         this IServiceCollection services,
