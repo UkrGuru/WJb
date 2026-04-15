@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="BaselineQueueBenchmark.cs" />
+    <Compile Remove="Class1.cs" />
+    <Compile Remove="DelayedJobBenchmark.cs" />
+    <Compile Remove="JobEnqueueBenchmark.cs" />
+    <Compile Remove="JobProcessorBenchmark.cs" />
+    <Compile Remove="JobQueueBenchmark.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.6" />
+    <PackageReference Include="WJb" Version="0.25.0" />
+  </ItemGroup>
+
+</Project>
