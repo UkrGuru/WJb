@@ -114,3 +114,32 @@ For commercial licensing inquiries, contact:
 - Libraries over frameworks  
 
 ---
+
+## Execution model & guarantees
+
+WJb follows a **minimal, explicit execution model**. To avoid incorrect assumptions,
+the following guarantees are intentionally defined and limited.
+
+### What is guaranteed
+
+- Jobs are executed **at least once**
+- Ordering is guaranteed **only within a single workflow chain**
+  (e.g. `first → second → third`)
+- Workflow progression is driven by declarative metadata (`ActionItem.More`)
+
+### What is NOT guaranteed
+
+- Exactly-once execution
+- Global ordering across different workflows
+- Deterministic ordering between jobs of the same priority
+- Execution timing under load
+
+### Notes on parallelism
+
+- Parallel execution depends on the configured job queue
+- Production queues may reorder jobs of equal priority
+- Actions **must be idempotent** and safe for re-execution
+
+If your use case requires strict ordering, retries, or transactional guarantees,
+those concerns must be handled explicitly by your application logic.
+``
