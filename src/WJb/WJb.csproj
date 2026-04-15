@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-
-        <!-- Target / language configuration -->
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -13,17 +11,11 @@
         <Version>0.25.0</Version>
 
         <!-- Strong-name signing -->
-        <SignAssembly>True</SignAssembly>
+        <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>..\..\..\UkrGuru.snk</AssemblyOriginatorKeyFile>
-
-        <!-- Author / ownership -->
         <Company>PE VIKTOR Oleksandr Oleksandrovych</Company>
         <Authors>UkrGuru</Authors>
         <Copyright>PE VIKTOR Oleksandr Oleksandrovych</Copyright>
-
-        <!-- Project / repository metadata -->
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/UkrGuru/WJb</RepositoryUrl>
         <PackageProjectUrl>https://github.com/UkrGuru/WJb</PackageProjectUrl>
 
         <!-- NuGet package content -->
@@ -47,15 +39,15 @@
         <EnableSourceLink>true</EnableSourceLink>
 
     </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
       <DebugType>embedded</DebugType>
     </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DebugType>none</DebugType>
+        <DebugType>portable</DebugType>
     </PropertyGroup>
-    <ItemGroup>
-      <Compile Remove="Extensions\ActionItemFactory.cs" />
-    </ItemGroup>
+
     <ItemGroup>
         <EmbeddedResource Include="..\..\LICENSE">
             <Pack>True</Pack>
@@ -71,9 +63,9 @@
         </EmbeddedResource>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.6" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.6" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.6" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
     </ItemGroup>
     <ItemGroup>
         <Using Include="System" />
