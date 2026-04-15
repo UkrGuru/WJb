@@ -15,6 +15,12 @@ var actions = new Dictionary<string, ActionItem>
 };
 
 using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.AddSimpleConsole(opt => { opt.SingleLine = true; });
+        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.None);
+    })
     .ConfigureServices((ctx, services) =>
     {
         services.AddWJb(actions);
@@ -46,7 +52,7 @@ public sealed class PrintAction(ILogger<PrintAction> logger) : IAction
 
     public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
     {
-        var text = jobMore?["text"]?.GetValue<string>() ?? "<empty>";
+        var text = jobMore.GetString("text") ?? "<empty>";
         _logger.LogInformation(text);
         return Task.CompletedTask;
     }

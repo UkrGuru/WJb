@@ -21,23 +21,6 @@ Expected execution order:
 
 ***
 
-## Register priority support
-
-```csharp
-services.AddSingleton<IJobQueue, SamplePriorityJobQueue>();
-
-services.AddSingleton<SampleJobProcessor>();
-services.AddSingleton<IJobProcessor>(
-    sp => sp.GetRequiredService<SampleJobProcessor>());
-services.AddHostedService(
-    sp => sp.GetRequiredService<SampleJobProcessor>());
-```
-
-*   `SamplePriorityJobQueue` handles priority ordering
-*   `SampleJobProcessor` processes jobs from the queue
-
-***
-
 ## Enqueue jobs with priority
 
 ```csharp
@@ -64,10 +47,12 @@ await jobs.EnqueueJobAsync(
 ```csharp
 public sealed class PrintAction(ILogger<PrintAction> logger) : IAction
 {
+    private readonly ILogger<PrintAction> _logger = logger;
+
     public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
     {
-        var text = jobMore?["text"]?.GetValue<string>() ?? "<empty>";
-        logger.LogInformation(text);
+        var text = jobMore.GetString("text") ?? "<empty>";
+        _logger.LogInformation(text);
         return Task.CompletedTask;
     }
 }
@@ -84,14 +69,10 @@ dotnet run
 Example output order:
 
 ```text
-info: WJb.SampleJobProcessor[0]
-      JobProcessor started
-info: PrintAction[0]
-      High priority
-info: PrintAction[0]
-      Normal priority
-info: PrintAction[0]
-      Low priority
+info: WJb.JobProcessor[0] JobProcessor started
+info: PrintAction[0] High priority
+info: PrintAction[0] Normal priority
+info: PrintAction[0] Low priority
 ```
 
 ***

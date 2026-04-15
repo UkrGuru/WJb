@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="../src/WJb/WJb.csproj" />
+  <Project Path="Basics/CronWJb/CronWJb.csproj" />
   <Project Path="Basics/HelloWJb/HelloWJb.csproj" />
   <Project Path="Basics/PriorityWJb/PriorityWJb.csproj" />
   <Project Path="Basics/WorkflowWJb/WorkflowWJb.csproj" />

@@ -18,7 +18,6 @@ var actions = new Dictionary<string, ActionItem>
     }
 };
 
-
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((ctx, services) =>
     {
