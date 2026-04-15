@@ -1,61 +1,79 @@
 # Workflow WJb – Minimal Example
 
-This example shows how to build a **job workflow** in **WJb**, where one action **automatically schedules the next action**.
+This example demonstrates a **minimal job workflow** using **WJb**, where the execution order is defined declaratively and each action can automatically enqueue the next action.
 
-***
+The example is intentionally compact and uses the modern `AddWJb(...)` registration style.
+
+---
 
 ## What happens
 
-1.  The app starts a generic host
-2.  The first job (`first`) is enqueued
-3.  `FirstAction` runs
-4.  `FirstAction` enqueues the next job (`second`)
-5.  `SecondAction` runs
+1. A generic host is started
+2. A workflow definition is registered via `ActionItem`
+3. The first job (`first`) is compacted and enqueued
+4. `FirstAction` runs
+5. The workflow automatically schedules `SecondAction`
+6. `SecondAction` runs
 
-Execution order is strictly controlled by the workflow.
+Execution order is strictly controlled by the workflow configuration.
 
-***
+---
 
-## Register actions and processor
+## Workflow definition
+
+Actions and their relationships are defined up-front:
 
 ```csharp
-services.AddSingleton<FirstAction>();
-services.AddSingleton<SecondAction>();
-
-services.AddSingleton<IActionFactory>(sp =>
-    new ActionFactory(
-        sp,
-        new Dictionary<string, ActionItem>
-        {
-            ["first"] = new ActionItem(
-                typeof(FirstAction).AssemblyQualifiedName!, null),
-            ["second"] = new ActionItem(
-                typeof(SecondAction).AssemblyQualifiedName!, null)
-        }));
-
-services.AddSingleton<IJobQueue, SamplePriorityJobQueue>();
-
-services.AddSingleton<SampleJobProcessor>();
-services.AddSingleton<IJobProcessor>(
-    sp => sp.GetRequiredService<SampleJobProcessor>());
-services.AddHostedService(
-    sp => sp.GetRequiredService<SampleJobProcessor>());
+var actions = new Dictionary<string, ActionItem>
+{
+    ["first"] = new ActionItem
+    {
+        Type = "FirstAction, WorkflowWJb",
+        More = new JsonObject { ["next"] = "second" }
+    },
+    ["second"] = new ActionItem
+    {
+        Type = "SecondAction, WorkflowWJb"
+    }
+};
 ```
 
-***
+- `Type` specifies the action implementation
+- `More["next"]` declares the next step in the workflow
+- No external coordinator is required
 
-## Start the workflow
+---
+
+## Service registration
 
 ```csharp
+services.AddWJb(actions);
+```
+
+`AddWJb` registers:
+- the job processor
+- the action factory
+- workflow metadata
+- the hosted background service
+
+---
+
+## Starting the workflow
+
+```csharp
+var jobs = host.Services.GetRequiredService<IJobProcessor>();
+
 var job = await jobs.CompactAsync("first");
 await jobs.EnqueueJobAsync(job);
 ```
 
-This triggers the workflow by running the **first action only**.
+Only the **first job** is enqueued manually. All subsequent steps are derived from the workflow definition.
 
-***
+---
 
-## First action (produces next step)
+## Actions
+
+### First action
 
 ```csharp
 public sealed class FirstAction(
@@ -67,21 +85,10 @@ public sealed class FirstAction(
         logger.LogInformation("First action executed");
         return Task.CompletedTask;
     }
-
-    public async Task NextAsync(JsonObject? _, CancellationToken ct)
-    {
-        var job = await jobs.CompactAsync("second");
-        await jobs.EnqueueJobAsync(job);
-    }
 }
 ```
 
-*   `ExecAsync` performs the action
-*   `NextAsync` schedules the next step in the workflow
-
-***
-
-## Second action (final step)
+### Second action
 
 ```csharp
 public sealed class SecondAction(
@@ -95,7 +102,10 @@ public sealed class SecondAction(
 }
 ```
 
-***
+- Actions only implement `ExecAsync`
+- Workflow progression is driven by metadata (`More.next`), not code
+
+---
 
 ## Run
 
@@ -106,21 +116,18 @@ dotnet run
 Expected output:
 
 ```text
-info: WJb.SampleJobProcessor[0]
-      JobProcessor started
-info: FirstAction[0]
-      First action executed
-info: SecondAction[0]
-      Second action executed
+JobProcessor started
+First action executed
+Second action executed
 ```
 
-***
+---
 
 ## Summary
 
-*   Workflow starts with one job
-*   Each action can enqueue the next action
-*   No external coordinator needed
-*   Flow control lives inside actions
+- The workflow starts with a single job
+- Each action automatically schedules the next one
+- No manual chaining logic inside actions
+- Flow control lives in declarative workflow metadata
 
-This is the **minimal workflow pattern** in WJb.
+This is the **simplest recommended workflow pattern** in WJb.

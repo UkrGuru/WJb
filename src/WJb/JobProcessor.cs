@@ -48,10 +48,10 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
                     if (nextMore is not null)
                     {
                         nextMore["__success"] = success;
-                        nextMore["__priority"] = priority.ToString();
 
-                        var action = _factory.Create(actionType);
-                        await action.NextAsync(nextMore, stoppingToken).ConfigureAwait(false);
+                        var nextCode = nextMore.GetString("__code")!;
+                        var nextJob = await CompactAsync(nextCode, nextMore, stoppingToken).ConfigureAwait(false);
+                        await EnqueueJobAsync(nextJob, priority, stoppingToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -80,7 +80,11 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
         var more = node.GetObject("more") ?? [];
 
         var item = _factory.GetActionItem(code);
-        return Task.FromResult((item.Type, more));
+
+        var mergedMore = (item.More?.DeepClone() as JsonObject) ?? [];
+        MoreExtensions.MergeInto(mergedMore, more);
+
+        return Task.FromResult((item.Type, mergedMore));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -90,7 +94,7 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
         while (!stoppingToken.IsCancellationRequested)
         {
             var (job, prio) = await _queue.DequeueNextAsync(stoppingToken).ConfigureAwait(false);
-            _ = ProcessJobAsync(job, prio, stoppingToken);
+            await ProcessJobAsync(job, prio, stoppingToken).ConfigureAwait(false);
         }
     }
 

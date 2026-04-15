@@ -17,8 +17,7 @@ public sealed class JobProcessorTests
 
         var processor = CreateProcessor(factory);
 
-        var job = await processor.CompactAsync(actionCode: "A", jobMore: new { X = 1 });
-
+        var job = await processor.CompactAsync("A", new { X = 1 });
         var (type, more) = await processor.ExpandAsync(job);
 
         Assert.Equal(typeof(TestAction).AssemblyQualifiedName, type);
@@ -46,50 +45,68 @@ public sealed class JobProcessorTests
        ======================= */
 
     [Fact]
-    public async Task ProcessJob_Executes_Action_And_Next_On_Success()
+    public async Task ProcessJob_Executes_Action_And_Enqueues_Next_On_Success()
     {
         var action = new CapturingAction();
         var factory = new TestActionFactory();
         factory.Register("A", typeof(CapturingAction), action);
 
-        var processor = CreateProcessor(factory);
+        var queue = new CapturingQueue();
+        var processor = CreateProcessor(factory, queue);
 
-        var job = await processor.CompactAsync("A", new { Value = 10, next = "A" });
+        var job = await processor.CompactAsync("A", new { next = "A" });
 
         await processor.ProcessJobAsync(job, Priority.Normal);
 
         Assert.True(action.ExecCalled);
-        Assert.True(action.NextCalled);
-        Assert.True(action.NextMore!["__success"]!.GetValue<bool>());
-        Assert.Equal("Normal", action.NextMore!["__priority"]!.GetValue<string>());
+
+        Assert.Single(queue.Enqueued);
+
+        var (nextJob, prio) = queue.Enqueued[0];
+        Assert.Equal(Priority.Normal, prio);
+
+        var node = JsonNode.Parse(nextJob)!.AsObject();
+        Assert.Equal("A", node["code"]!.GetValue<string>());
+
+        var more = node["more"]!.AsObject();
+        Assert.True(more["__success"]!.GetValue<bool>());
     }
 
     [Fact]
-    public async Task ProcessJob_Sets_Success_False_When_Failure_Path_Is_Taken()
+    public async Task ProcessJob_Sets_Success_False_And_Enqueues_Fail_Path()
     {
         var action = new ThrowingAction();
         var factory = new TestActionFactory();
         factory.Register("A", typeof(ThrowingAction), action);
 
-        var processor = CreateProcessor(factory);
+        var queue = new CapturingQueue();
+        var processor = CreateProcessor(factory, queue);
 
         var job = await processor.CompactAsync("A", new { fail = "A" });
 
         await processor.ProcessJobAsync(job, Priority.Low);
 
-        Assert.True(action.NextCalled);
-        Assert.False(action.NextMore!["__success"]!.GetValue<bool>());
-        Assert.Equal("Low", action.NextMore!["__priority"]!.GetValue<string>());
+        Assert.Single(queue.Enqueued);
+
+        var (nextJob, prio) = queue.Enqueued[0];
+        Assert.Equal(Priority.Low, prio);
+
+        var node = JsonNode.Parse(nextJob)!.AsObject();
+        var more = node["more"]!.AsObject();
+
+        Assert.False(more["__success"]!.GetValue<bool>());
     }
 
     [Fact]
-    public async Task ProcessJob_Cancellation_Skips_Action_Exec()
+    public async Task ProcessJob_Cancellation_Skips_Action_And_Enqueue()
     {
-        var action = new CancelAwareAction();
+        var action = new CapturingAction();
         var factory = new TestActionFactory();
-        factory.Register("A", typeof(CancelAwareAction), action);
+        factory.Register("A", typeof(CapturingAction), action);
 
-        var processor = CreateProcessor(factory);
+        var queue = new CapturingQueue();
+        var processor = CreateProcessor(factory, queue);
+
         var job = await processor.CompactAsync("A");
 
         using var cts = new CancellationTokenSource();
@@ -98,36 +115,7 @@ public sealed class JobProcessorTests
         await processor.ProcessJobAsync(job, Priority.Normal, cts.Token);
 
         Assert.False(action.ExecCalled);
-    }
-
-
-    internal sealed class CancelAwareAction : IAction
-    {
-        public bool ExecCalled;
-
-        public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            ExecCalled = true;
-            return Task.CompletedTask;
-        }
-    }
-
-
-    [Fact]
-    public async Task ProcessJob_Executes_Next_On_Failure_When_Fail_Is_Defined()
-    {
-        var action = new ThrowingAction();
-        var factory = new TestActionFactory();
-        factory.Register("A", typeof(ThrowingAction), action);
-
-        var processor = CreateProcessor(factory);
-
-        var job = await processor.CompactAsync("A", new { fail = "A" });
-
-        await processor.ProcessJobAsync(job, Priority.High);
-
-        Assert.True(action.NextCalled);
+        Assert.Empty(queue.Enqueued);
     }
 
     /* =======================
@@ -188,25 +176,15 @@ internal sealed class TestActionFactory : IActionFactory
             : (IAction)Activator.CreateInstance(type)!;
     }
 
-    public ActionItem GetActionItem(string actionCode)
-        => _items[actionCode];
+    public ActionItem GetActionItem(string actionCode) => _items[actionCode];
 
-    public IReadOnlyDictionary<string, ActionItem> Snapshot()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Reload(IDictionary<string, ActionItem> newConfig)
-    {
-        throw new NotImplementedException();
-    }
+    public IReadOnlyDictionary<string, ActionItem> Snapshot() => throw new NotImplementedException();
+    public void Reload(IDictionary<string, ActionItem> newConfig) => throw new NotImplementedException();
 }
 
 internal sealed class CapturingAction : IAction
 {
     public bool ExecCalled;
-    public bool NextCalled;
-    public JsonObject? NextMore;
 
     public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
     {
@@ -214,28 +192,10 @@ internal sealed class CapturingAction : IAction
         ExecCalled = true;
         return Task.CompletedTask;
     }
-
-
-    public Task NextAsync(JsonObject nextMore, CancellationToken cancellationToken)
-    {
-        NextCalled = true;
-        NextMore = nextMore;
-        return Task.CompletedTask;
-    }
 }
 
 internal sealed class ThrowingAction : IAction
 {
-    public bool NextCalled;
-    public JsonObject? NextMore;
-
     public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
         => throw new InvalidOperationException("Boom");
-
-    public Task NextAsync(JsonObject nextMore, CancellationToken cancellationToken)
-    {
-        NextCalled = true;
-        NextMore = nextMore;
-        return Task.CompletedTask;
-    }
 }

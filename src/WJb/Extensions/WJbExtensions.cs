@@ -7,22 +7,15 @@ namespace WJb.Extensions;
 
 public static class WJbExtensions
 {
-    public static IServiceCollection AddWJb(
-        this IServiceCollection services,
-        IDictionary<string, ActionItem>? actions = null,
-        bool addActionFactory = true,
-        bool addProcessor = true,
-        bool addScheduler = false,
-        bool addHostedServices = true)
+    public static IServiceCollection AddWJb(this IServiceCollection services, IDictionary<string, ActionItem>? actions = null, 
+        bool addActionFactory = true, bool addProcessor = true, bool addScheduler = false, bool addHostedServices = true)
     {
         services.AddWJbActions(actions, addActionFactory);
         services.AddWJbRuntime(addProcessor, addScheduler, addHostedServices);
         return services;
     }
 
-    public static IServiceCollection AddWJbActions(
-        this IServiceCollection services,
-        IDictionary<string, ActionItem>? actions = null,
+    public static IServiceCollection AddWJbActions(this IServiceCollection services, IDictionary<string, ActionItem>? actions = null, 
         bool addActionFactory = true)
     {
         // Merge action map
@@ -30,9 +23,7 @@ public static class WJbExtensions
 
         if (actions is not null)
         {
-            finalMap = new Dictionary<string, ActionItem>(
-                actions,
-                StringComparer.OrdinalIgnoreCase);
+            finalMap = new Dictionary<string, ActionItem>(actions, StringComparer.OrdinalIgnoreCase); 
         }
 
         // Register each action CLR type as transient
@@ -42,8 +33,7 @@ public static class WJbExtensions
             {
                 var typeName = kv.Value.Type;
 
-                var type = Type.GetType(typeName)
-                    ?? throw new Exception($"Invalid action type: '{typeName}'");
+                var type = Type.GetType(typeName) ?? throw new Exception($"Invalid action type: '{typeName}'");
 
                 EnsureTransient(services, type);
             }
@@ -61,11 +51,7 @@ public static class WJbExtensions
         return services;
     }
 
-    public static IServiceCollection AddWJbRuntime(
-        this IServiceCollection services,
-        bool addProcessor = true,
-        bool addScheduler = false,
-        bool addHostedServices = true)
+    public static IServiceCollection AddWJbRuntime(this IServiceCollection services, bool addProcessor = true, bool addScheduler = false, bool addHostedServices = true)
     {
         // Queue needed if processor or scheduler is on
         if (addProcessor || addScheduler)
@@ -94,15 +80,15 @@ public static class WJbExtensions
         // Scheduler: singleton + (optional) hosted
         if (addScheduler)
         {
-            //// JobScheduler(IJobQueue, IActionFactory, IJobProcessor, ILogger<JobScheduler>)
-            //EnsureSingleton<JobScheduler>(services, sp => new JobScheduler(
-            //    sp.GetRequiredService<IJobQueue>(),
-            //    sp.GetRequiredService<IActionFactory>(),
-            //    sp.GetRequiredService<IJobProcessor>(),
-            //    sp.GetRequiredService<ILogger<JobScheduler>>()));
+            // JobScheduler(IJobQueue, IActionFactory, IJobProcessor, ILogger<JobScheduler>)
+            EnsureSingleton<JobScheduler>(services, sp => new JobScheduler(
+                sp.GetRequiredService<IJobQueue>(),
+                sp.GetRequiredService<IActionFactory>(),
+                sp.GetRequiredService<IJobProcessor>(),
+                sp.GetRequiredService<ILogger<JobScheduler>>()));
 
-            //if (addHostedServices)
-            //    EnsureHostedService<JobScheduler>(services);
+            if (addHostedServices)
+                EnsureHostedService<JobScheduler>(services);
         }
 
         return services;
@@ -130,8 +116,7 @@ public static class WJbExtensions
     // Marker type to ensure we only register a hosted service once per THosted.
     private sealed class HostedMarker<THosted> where THosted : class, IHostedService { }
 
-    private static void EnsureHostedService<THosted>(IServiceCollection services)
-        where THosted : class, IHostedService
+    private static void EnsureHostedService<THosted>(IServiceCollection services) where THosted : class, IHostedService
     {
         // If the marker exists, we've already registered the hosted service.
         if (services.Any(d => d.ServiceType == typeof(HostedMarker<THosted>)))
