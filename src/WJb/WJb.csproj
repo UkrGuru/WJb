@@ -3,12 +3,16 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
 
         <!-- Assembly identity -->
         <AssemblyName>WJb</AssemblyName>
         <RootNamespace>WJb</RootNamespace>
         <PackageId>WJb</PackageId>
         <Version>0.25.0</Version>
+
+        <!-- Deterministic build -->
+        <Deterministic>true</Deterministic>
 
         <!-- Strong-name signing -->
         <SignAssembly>true</SignAssembly>
@@ -19,29 +23,41 @@
         <PackageProjectUrl>https://github.com/UkrGuru/WJb</PackageProjectUrl>
 
         <!-- NuGet package content -->
-        <Description>WJb is a lightweight and flexible background job execution library for .NET, built for simplicity and scalability. It provides priority-based queues, JSON payload handling, scheduled jobs using standard cron syntax, and seamless integration with dependency injection and hosted services.</Description>
-        <PackageTags>webjobs</PackageTags>
+        <Description>
+            WJb is a lightweight and flexible background job execution library for .NET,
+            built for simplicity and scalability. It provides priority-based queues,
+            JSON payload handling, scheduled jobs using standard cron syntax,
+            and seamless integration with dependency injection and hosted services.
+        </Description>
+        <PackageTags>
+            webjobs; background-jobs; job-queue; workflow;
+            scheduler; cron; dotnet; hosting; dependency-injection;
+            async; queue; worker
+        </PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageIcon>ukrguru-logo.jpg</PackageIcon>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <PackageReleaseNotes></PackageReleaseNotes>
 
-        <!-- Symbols / debugging -->
-        <IncludeSymbols>False</IncludeSymbols>
+        <!-- Symbols / debugging (NuGet-quality compliant) -->
+        <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-        <DebugType>embedded</DebugType>
-        <GenerateDocumentationFile>False</GenerateDocumentationFile>
+        <DebugType>portable</DebugType>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
         <!-- SourceLink -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <EnableSourceLink>true</EnableSourceLink>
 
+        <!-- Compiler intent -->
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <DebugType>embedded</DebugType>
+        <DebugType>portable</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
