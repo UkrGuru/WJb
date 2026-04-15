@@ -19,6 +19,12 @@ var actions = new Dictionary<string, ActionItem>
 };
 
 using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureLogging(logging =>
+    {
+        logging.ClearProviders();
+        logging.AddSimpleConsole(opt => { opt.SingleLine = true; });
+        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.None);
+    })
     .ConfigureServices((ctx, services) =>
     {
         services.AddWJb(actions);
