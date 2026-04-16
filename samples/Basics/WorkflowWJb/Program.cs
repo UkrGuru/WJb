@@ -7,14 +7,14 @@ using WJb.Extensions;
 
 var actions = new Dictionary<string, ActionItem>
 {
-    ["first"] = new ActionItem
+    ["fib-start"] = new ActionItem
     {
-        Type = "FirstAction, WorkflowWJb",
-        More = new JsonObject { ["next"] = "second" }
+        Type = "FibonacciStartAction, WorkflowWJb",
+        More = new JsonObject { ["next"] = "fib-build" }
     },
-    ["second"] = new ActionItem
+    ["fib-build"] = new ActionItem
     {
-        Type = "SecondAction, WorkflowWJb"
+        Type = "FibonacciBuildAction, WorkflowWJb"
     }
 };
 
@@ -33,32 +33,79 @@ using var host = Host.CreateDefaultBuilder(args)
 
 var jobs = host.Services.GetRequiredService<IJobProcessor>();
 
-// Start the chain with the first action
-var job = await jobs.CompactAsync("first");
+var job = await jobs.CompactAsync("fib-start", new { from = 10, to = 100 });
 
 await jobs.EnqueueJobAsync(job);
 
 await host.RunAsync();
 
-public sealed class FirstAction(ILogger<FirstAction> logger, IJobProcessor jobs) : IAction
-{
-    private readonly ILogger<FirstAction> _logger = logger;
-    private readonly IJobProcessor _jobs = jobs;
+// ------------------
 
-    public Task ExecAsync(JsonObject? _, CancellationToken __)
+public sealed class FibonacciStartAction(ILogger<FibonacciStartAction> logger) : IAction
+{
+    private readonly ILogger<FibonacciStartAction> _logger = logger;
+
+    public Task ExecAsync(JsonObject? more, CancellationToken _)
     {
-        _logger.LogInformation("First action executed");
+        ArgumentNullException.ThrowIfNull(more);
+
+        var from = more.GetInt64("from") ?? throw new ArgumentNullException("from");
+        var to = more.GetInt64("to") ?? throw new ArgumentNullException("to");
+
+        long a = 0;
+        long b = 1;
+
+        // Advance until first Fibonacci value >= from
+        while (a < from)
+        {
+            var next = a + b;
+            a = b;
+            b = next;
+        }
+
+        more["next_from"] = from;
+        more["next_to"] = to;
+        more["next_a"] = a;
+        more["next_b"] = b;
+
+        _logger.LogInformation(
+            "Start Fibonacci values in range [{From}..{To}]: a={A}, b={B}",
+            from, to, a, b
+        );
+
         return Task.CompletedTask;
     }
 }
 
-public sealed class SecondAction(ILogger<SecondAction> logger) : IAction
+public sealed class FibonacciBuildAction(ILogger<FibonacciBuildAction> logger) : IAction
 {
-    private readonly ILogger<SecondAction> _logger = logger;
+    private readonly ILogger<FibonacciBuildAction> _logger = logger;
 
-    public Task ExecAsync(JsonObject? _, CancellationToken __)
+    public Task ExecAsync(JsonObject? more, CancellationToken _)
     {
-        _logger.LogInformation("Second action executed");
+        ArgumentNullException.ThrowIfNull(more);
+
+        var from = more.GetInt64("from") ?? throw new ArgumentNullException("from");
+        var to = more.GetInt64("to") ?? throw new ArgumentNullException("to");
+        var a = more.GetInt64("a") ?? throw new ArgumentNullException("a");
+        var b = more.GetInt64("b") ?? throw new ArgumentNullException("b");
+
+        var values = new JsonArray();
+
+        while (a <= to)
+        {
+            values.Add(a);
+
+            var next = a + b;
+            a = b;
+            b = next;
+        }
+
+        _logger.LogInformation(
+            "Fibonacci values [{From}..{To}] = {Result}",
+            from, to, values.ToJsonString()
+        );
+
         return Task.CompletedTask;
     }
 }

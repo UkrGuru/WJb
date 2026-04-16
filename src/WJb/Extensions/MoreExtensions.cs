@@ -4,20 +4,21 @@ using System.Text.Json.Nodes;
 namespace WJb.Extensions;
 
 /// <summary>
-/// Helpers for <see cref="JsonObject"/> / <see cref="JsonNode"/> to make payload handling safe and ergonomic.
-/// These helpers are intentionally forgiving: missing or invalid shapes typically return <c>null</c> or defaults
-/// rather than throw, so callers can compose behavior without excessive try/catch.
+/// Helpers for JsonObject / JsonNode to make payload handling safe and ergonomic.
 /// </summary>
 public static class MoreExtensions
 {
     // ----------------------------------------------------------------
     // Simple scalar getters
     // ----------------------------------------------------------------
+
     public static void AddPriority(this JsonObject element, Priority priority, string propertyName = "priority")
         => element.Add(propertyName, priority.ToString());
 
     public static Priority GetPriority(this JsonObject? element, string propertyName = "priority", Priority defaultPriority = Priority.Normal)
-        => Enum.TryParse<Priority>(element.GetString(propertyName), ignoreCase: true, out var p) ? p : defaultPriority;
+        // Parse enum value safely; fallback to default on missing/invalid value
+        => Enum.TryParse<Priority>(element.GetString(propertyName), ignoreCase: true, out var p)
+            ? p : defaultPriority;
 
     public static string? GetString(this JsonObject? element, string propertyName)
         => element?[propertyName]?.GetValue<string?>();
@@ -46,70 +47,80 @@ public static class MoreExtensions
     // ----------------------------------------------------------------
     // Nested structures
     // ----------------------------------------------------------------
-    /// <summary>Returns a nested <see cref="JsonObject"/> by property name, or <c>null</c> if it's not an object.</summary>
+
     public static JsonObject? GetObject(this JsonObject? element, string propertyName)
+        // Safe cast: returns null if node is not an object
         => element?[propertyName]?.AsObject();
 
-    /// <summary>Returns a <see cref="JsonArray"/> by property name, or <c>null</c> if it's not an array.</summary>
     public static JsonArray? GetArray(this JsonObject? element, string propertyName)
+        // Safe cast: returns null if node is not an array
         => element?[propertyName]?.AsArray();
 
-    /// <summary>
-    /// Returns an <see cref="IEnumerable{JsonNode}"/> for an array property; empty if missing/not array.
-    /// </summary>
     public static IEnumerable<JsonNode?> GetItems(this JsonObject? element, string propertyName)
     {
         var arr = element.GetArray(propertyName);
-        if (arr is null || arr.Count == 0) yield break;
-        foreach (var item in arr) yield return item;
+
+        // Treat missing or empty arrays as empty sequence
+        if (arr is null || arr.Count == 0)
+            yield break;
+
+        foreach (var item in arr)
+            yield return item;
     }
 
     // ----------------------------------------------------------------
-    // Enum / Typed conversion
+    // Enum / typed conversion
     // ----------------------------------------------------------------
-    /// <summary>
-    /// Parses an enum value from string, case-insensitive; <c>null</c> if missing/invalid.
-    /// </summary>
+
     public static TEnum? GetEnum<TEnum>(this JsonObject? element, string propertyName) where TEnum : struct
     {
         var s = element.GetString(propertyName);
-        if (string.IsNullOrWhiteSpace(s)) return null;
-        return Enum.TryParse<TEnum>(s, ignoreCase: true, out var value) ? value : (TEnum?)null;
+        if (string.IsNullOrWhiteSpace(s))
+            return null;
+
+        // Case-insensitive enum parsing
+        return Enum.TryParse<TEnum>(s, ignoreCase: true, out var value)
+            ? value
+            : (TEnum?)null;
     }
 
     // ----------------------------------------------------------------
     // Normalization
     // ----------------------------------------------------------------
-    /// <summary>
-    /// Convert any object (anonymous types, JsonNode, JsonElement, etc.) to <see cref="JsonObject"/>?.
-    /// Arrays cannot be coerced into <see cref="JsonObject"/> and will return <c>null</c>.
-    /// </summary>
+
     public static JsonObject? ToJsonObject(dynamic? source)
     {
-        if (source is null) return null;
+        if (source is null)
+            return null;
 
-        if (source is JsonObject jo) return jo;
+        // Fast-path for already normalized types
+        if (source is JsonObject jo)
+            return jo;
 
         if (source is JsonNode node)
         {
-            if (node is JsonObject obj) return obj;
-            return null; // do not coerce arrays into objects
+            // Explicitly reject arrays
+            return node is JsonObject obj ? obj : null;
         }
 
         if (source is JsonElement el)
         {
+            // Materialize JsonElement.object into JsonNode
             if (el.ValueKind == JsonValueKind.Object)
                 return JsonNode.Parse(el.GetRawText()) as JsonObject;
+
             return null;
         }
 
         try
         {
+            // Fallback: serialize arbitrary objects and reparse
             var json = JsonSerializer.Serialize(source);
             return JsonNode.Parse(json) as JsonObject;
         }
         catch
         {
+            // Intentionally forgiving: never throw here
             return null;
         }
     }
@@ -117,35 +128,35 @@ public static class MoreExtensions
     // ----------------------------------------------------------------
     // Merge (child-wins overlay semantics)
     // ----------------------------------------------------------------
-    /// <summary>
-    /// Merge properties from <paramref name="source"/> into <paramref name="target"/>.
-    /// - For primitives/values: overwrite.<br/>
-    /// - For arrays: deep clone (replace).<br/>
-    /// - For objects: recursive merge (child-wins).
-    /// </summary>
+
     public static void MergeInto(JsonObject target, JsonObject? source)
     {
         JsonObject? srcObj = ToJsonObject(source);
-        if (srcObj is null) return;
+        if (srcObj is null)
+            return;
 
         foreach (var kvp in srcObj)
         {
             var key = kvp.Key;
             var value = kvp.Value;
+
             switch (value)
             {
                 case JsonObject srcNested:
+                    // Recursive merge for nested objects
                     if (target[key] is JsonObject dstNested)
-                        MergeInto(dstNested, srcNested); // recursive merge
+                        MergeInto(dstNested, srcNested);
                     else
                         target[key] = srcNested.DeepClone();
                     break;
 
                 case JsonArray srcArr:
+                    // Arrays are replaced entirely
                     target[key] = srcArr.DeepClone();
                     break;
 
                 default:
+                    // Primitive/value overwrite
                     target[key] = value?.DeepClone();
                     break;
             }
@@ -155,6 +166,7 @@ public static class MoreExtensions
     // ----------------------------------------------------------------
     // Try-get helpers (avoid exceptions)
     // ----------------------------------------------------------------
+
     public static bool TryGetString(this JsonObject? element, string propertyName, out string? value)
     {
         value = element.GetString(propertyName);
@@ -173,16 +185,14 @@ public static class MoreExtensions
         return value is not null;
     }
 
-    /// <summary>
-    /// Extracts all properties from the given <see cref="JsonObject"/> whose keys start with the specified prefix.
-    /// The extracted properties are added to a new <see cref="JsonObject"/> with the prefix removed from their keys.
-    /// Values are deep-cloned to avoid mutating the original object.
-    /// </summary>
     public static JsonObject ExtractPrefixed(this JsonObject? more, string prefix)
     {
         var result = new JsonObject();
-        if (more is null) return result;
 
+        if (more is null)
+            return result;
+
+        // Copy all prefixed properties, stripping the prefix from keys
         foreach (var kvp in more)
         {
             if (kvp.Key.StartsWith(prefix, StringComparison.Ordinal))
@@ -191,7 +201,7 @@ public static class MoreExtensions
                 result[stripped] = kvp.Value?.DeepClone();
             }
         }
+
         return result;
     }
 }
-

@@ -3,15 +3,20 @@ using System.Threading.Channels;
 
 namespace WJb;
 
+/// <summary>
+/// In-memory implementation of IJobQueue with priority support.
+/// </summary>
 public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQueue
 {
     private readonly ILogger<InMemoryJobQueue> _logger = logger;
-
     private readonly Channel<string> _asap = Channel.CreateUnbounded<string>();
     private readonly Channel<string> _high = Channel.CreateUnbounded<string>();
     private readonly Channel<string> _normal = Channel.CreateUnbounded<string>();
     private readonly Channel<string> _low = Channel.CreateUnbounded<string>();
 
+    /// <summary>
+    /// Enqueues a job with the specified priority.
+    /// </summary>
     public async Task EnqueueAsync(string job, Priority priority, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Enqueue job '{Job}' with priority {Priority}", job, priority);
@@ -28,6 +33,9 @@ public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQue
         await channel.Writer.WriteAsync(job, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Dequeues the next available job respecting priority order.
+    /// </summary>
     public async Task<(string Job, Priority Priority)> DequeueNextAsync(
         CancellationToken cancellationToken = default)
     {
@@ -59,8 +67,11 @@ public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQue
         }
     }
 
+    /// <summary>
+    /// Releases a processing slot for the specified priority.
+    /// </summary>
     public void ReleaseSlot(Priority priority)
     {
-        // Available only in the paid version.
+        // Available only in the commercial edition.
     }
 }
