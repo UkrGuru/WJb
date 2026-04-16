@@ -1,11 +1,3 @@
-Below is a **clean, modernized README.md** proposal you can drop into  
-`/samples/README.md` on the **`dev`** branch.
-
-It reflects the **current samples structure**, the **explicit WJb philosophy**, and clearly separates **free vs commercial scope**—while staying consistent with how your per-sample READMEs are written.  
-(Structure verified against the current `samples` tree.) [\[github.com\]](https://github.com/UkrGuru/WJb/tree/main/samples)
-
-***
-
 # WJb Samples
 
 This directory contains **small, focused samples** that demonstrate **core usage patterns** of the **WJb** background job library.
