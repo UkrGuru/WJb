@@ -1,62 +1,128 @@
+Below is a **clean, modernized README.md** proposal you can drop into  
+`/samples/README.md` on the **`dev`** branch.
+
+It reflects the **current samples structure**, the **explicit WJb philosophy**, and clearly separates **free vs commercial scope**—while staying consistent with how your per-sample READMEs are written.  
+(Structure verified against the current `samples` tree.) [\[github.com\]](https://github.com/UkrGuru/WJb/tree/main/samples)
+
+***
+
 # WJb Samples
 
-This directory contains a small, focused set of samples demonstrating
-**basic usage patterns of the WJb API**.
+This directory contains **small, focused samples** that demonstrate **core usage patterns** of the **WJb** background job library.
 
-The goal of these samples is to help you get started quickly and understand
-the core execution model of WJb.
+The goal of these samples is to help you:
 
-> These are **learning examples**, not production-ready solutions.
+*   understand the **WJb execution model**
+*   learn the **explicit APIs**
+*   get productive quickly **without hidden magic**
 
----
+> ⚠️ These are **learning examples**, not production-ready systems.
+
+***
+
+## 📦 Structure
+
+    samples/
+    ├─ Basics/
+    │  ├─ HelloWJb
+    │  ├─ PriorityWJb
+    │  └─ WorkflowWJb
+    ├─ Advanced/
+    │  └─ README.md
+    ├─ WJb.Samples.slnx
+    └─ README.md
+
+***
 
 ## ✅ Included Samples
 
-### Basics
-- **HwlloWJb**  
-  Minimal console application showing the first job execution.
+### **Basics**
 
-- **QueueWJb**  
-  Basic priority queue usage.
+Introductory samples covering the essential WJb concepts:
 
-- **TimerWJb**  
-  Delayed job execution using timers.
+| Sample          | Description                                              |
+| --------------- | -------------------------------------------------------- |
+| **HelloWJb**    | Minimal console app showing first job execution          |
+| **PriorityWJb** | Using priority-based queues                              |
+| **WorkflowWJb** | Job chaining via `NextAsync` (explicit workflow routing) |
 
-- **WorkflowWJb**  
-  Job chaining using `NextAsync`, where one job explicitly schedules the next.
+Each sample:
 
----
+*   is fully self-contained
+*   uses `IAction`, `JobProcessor`, and DI explicitly
+*   avoids infrastructure and persistence concerns
 
-## Scope
+***
 
-These samples focus strictly on demonstrating the WJb API
-and its execution model.
+## 🚫 Advanced Scenarios (Not Included)
 
-Production concerns such as persistence, retries, metrics,
-UI integration, security, and full system architectures
-are intentionally out of scope and are not shown here.
+Some advanced scenarios are **intentionally excluded** from public samples:
 
-## 🎯 Philosophy
+*   SQL-backed queues
+*   Metrics & dashboards
+*   Persistence & retries
+*   Web / UI integrations
+*   Distributed coordination
 
-WJb samples focus on:
-- clarity over completeness
-- explicit behavior over magic
-- API understanding over real-world infrastructure
+```csharp
+// Available only in the commercial edition.
+```
 
-This keeps the library lightweight and avoids misleading examples.
+These topics are either:
 
----
+*   covered conceptually, or
+*   available as part of **commercial examples and support**
 
-## 📦 NuGet
+See `samples/Advanced/README.md` for details. [\[github.com\]](https://github.com/UkrGuru/WJb/tree/main/samples/Advanced)
 
-- Package: `WJb`
-- Namespace: `WJb`
+***
 
-https://www.nuget.org/packages/WJb/
+## 🎯 Scope
 
----
+The samples focus strictly on:
+
+*   WJb API usage
+*   execution flow
+*   deterministic behavior
+*   developer control
+
+They **do not** demonstrate:
+
+*   databases
+*   retries
+*   UI apps
+*   monitoring
+*   production infrastructure
+
+This is by design.
+
+***
+
+## 🧠 Philosophy
+
+WJb samples emphasize:
+
+*   **clarity over completeness**
+*   **explicit behavior over magic**
+*   **understanding over abstractions**
+*   **API literacy over copy/paste solutions**
+
+This keeps both the samples **honest** and the library **lightweight**. [\[github.com\]](https://github.com/UkrGuru/WJb/tree/main/samples)
+
+***
+
+## 📦 Package Info
+
+*   **NuGet**: <https://www.nuget.org/packages/WJb>
+*   **Namespace**: `WJb`
+*   **Target**: .NET (Hosted Services, Console, Worker-style apps)
+
+***
 
 ## 📄 Licensing
 
-Samples follow the same dual-license model as WJb itself.
-See the main repository README for details.
+Samples follow the **same license model** as the main WJb library.
+
+Refer to the **root repository README** for licensing details.
+
+***
