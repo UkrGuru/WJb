@@ -1,22 +1,25 @@
-# WJb API v0.26.0
+## WJb API v0.26.0
 
-This document describes the **public API and execution model of WJb v0.26.0**, based on the current `dev` branch of the repository and aligned with all samples and extensions provided by the library. The focus is on **explicit behavior, predictable lifecycle, and minimal magic**, which are core design goals of WJb.
+This document describes the **public API and execution model of WJb v0.26.0**. It is intended as the **final, release-ready specification** and reflects the behavior of the `dev` branch at the moment of release.
+
+WJb is designed around **explicit behavior, predictable execution, and minimal magic**.
 
 ---
 
 ## 1. Overview
 
-**WJb** is a lightweight background job execution library for .NET. It executes **user-defined actions** using a **priority-based queue**, **JSON payloads**, and **explicit chaining** between jobs.
+**WJb** is a lightweight background job execution library for .NET. It executes **user-defined actions** using a **priority-based queue**, **JSON payloads**, and **explicit job continuation**.
 
 Key characteristics:
 
 - No database required (in-memory queue by default)
+- Priority-based execution
+- JSON-first payload model
 - Explicit dependency injection
 - Predictable execution flow
-- JSON-first payload model
 - Optional scheduling and hosted services
 
-WJb integrates naturally with **ASP.NET Core**, **console apps**, and **worker services** through `IHostedService`.
+WJb integrates naturally with **ASP.NET Core**, **console applications**, and **worker services** via `IHostedService`.
 
 ---
 
@@ -24,14 +27,16 @@ WJb integrates naturally with **ASP.NET Core**, **console apps**, and **worker s
 
 ### Job
 
-A job is a unit of work defined by:
+A **job** is a unit of work defined by:
 
-- **Action code** (string)
-- **Payload (`JsonObject`)**
+- **Action code** (`string`)
+- **Payload** (`JsonObject`)
 - **Priority**
 - **Optional chaining metadata**
 
 Jobs are enqueued into an `IJobQueue` and processed sequentially by a `JobProcessor`.
+
+Jobs may optionally enqueue subsequent jobs, enabling **workflow-like execution** without a separate orchestration engine.
 
 ---
 
@@ -39,50 +44,87 @@ Jobs are enqueued into an `IJobQueue` and processed sequentially by a `JobProces
 
 An **action** is a user-defined CLR type that performs work:
 
-- Stateless
-- Registered as `Transient`
-- Resolved through DI
+- Stateless by design
+- Registered as **Transient**
+- Resolved through Dependency Injection
 
-Actions are mapped by **action code → CLR type** via `ActionItem` metadata.
+Actions are mapped by **action code → CLR type** using `ActionItem` metadata.
 
 ---
 
-### Action Factory (`IActionFactory`)
+### Action Chaining
 
-Responsible for:
+An action may define continuation metadata in its payload. After execution:
 
-- Resolving action instances
+- The processor evaluates continuation rules
+- A next job may be enqueued
+- The decision may depend on execution success or failure
+
+This model enables deterministic, code-driven workflows while preserving a simple queue-based architecture.
+
+---
+
+### Action Factory (IActionFactory)
+
+The action factory is responsible for:
+
+- Creating action instances
+- Resolving actions by code (case-insensitive)
 - Providing immutable snapshots of action metadata
-- Supporting case-insensitive action codes
 
-The factory is registered as a **singleton**.
+The factory is registered as a **Singleton**.
 
 ---
 
-## 3. Dependency Injection Extensions
+## 3. Job Processing Model
+
+### JobProcessor
+
+`JobProcessor`:
+
+- Dequeues jobs respecting priority order
+- Expands JSON payloads into action metadata
+- Executes actions via the factory
+- Handles continuation logic
+
+Execution guarantees:
+
+- Jobs are processed sequentially per processor instance
+- Cancellation is cooperative
+- Continuation handling errors do not break the processing loop
+
+Parallelism is achieved by running multiple processors with separate queues.
+
+---
+
+## 4. Dependency Injection Extensions
 
 Namespace: `WJb.Extensions`
 
-### `AddWJb(...)`
+### AddWJb(...)
 
-````csharp
+```csharp
 IServiceCollection AddWJb(
     IDictionary<string, ActionItem>? actions = null,
     bool addActionFactory = true,
     bool addProcessor = true,
     bool addScheduler = false,
     bool addHostedServices = true)
-````
+```
 
 Registers the complete WJb runtime.
 
 ---
 
-## 11. References
+## 5. Scheduling (Optional)
 
-- WJb Repository: https://github.com/UkrGuru/WJb
-- Samples: https://github.com/UkrGuru/WJb/tree/main/samples
+When enabled, WJb supports time-based job scheduling (e.g., cron expressions).
 
 ---
 
-**End of api-v0.26.0.md**
+## 7. References
+
+- Repository: https://github.com/UkrGuru/WJb
+- Samples: https://github.com/UkrGuru/WJb/tree/main/samples
+
+**End of WJb API v0.26.0**
