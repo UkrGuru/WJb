@@ -9,5 +9,5 @@ public static class ActionItemFactory
     /// Creates an ActionItem from CLR type name and arbitrary metadata.
     /// </summary>
     public static ActionItem Create(string type, dynamic? more)
-        => new ActionItem(type, MoreExtensions.ToJsonObject(more));
+        => new(type, MoreExtensions.ToJsonObject(more));
 }

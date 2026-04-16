@@ -65,9 +65,6 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
                     var nextMore = NextExtractor.ExtractNextMore(mergedMore, success);
                     if (nextMore is not null)
                     {
-                        // Propagate execution result to the next job
-                        nextMore["__success"] = success;
-
                         var nextCode = nextMore.GetString("__code")!;
                         var nextJob = await CompactAsync(nextCode, nextMore, stoppingToken).ConfigureAwait(false);
 

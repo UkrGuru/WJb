@@ -1,34 +1,39 @@
-﻿
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 
 namespace WJb.Extensions;
 
 /// <summary>
-/// Builds payload for <c>IAction.NextAsync</c>:
-/// <list type="bullet">
-/// <item><description><c>__branch</c> ("next" | "fail")</description></item>
-/// <item><description><c>__code</c> (target action code)</description></item>
-/// <item><description><c>__overlay</c> (child-wins overlay stripped from prefixed keys)</description></item>
-/// </list>
-/// Returns <c>null</c> if no corresponding branch is configured.
+/// Helper for extracting Next/Fail chaining metadata.
 /// </summary>
 public static class NextExtractor
 {
+    /// <summary>
+    /// Extracts metadata for the next chained job based on execution result.
+    /// </summary>
     public static JsonObject? ExtractNextMore(JsonObject? mergedMore, bool success)
     {
-        if (mergedMore is null) return null;
+        // No metadata — no chaining
+        if (mergedMore is null)
+            return null;
 
+        // Select branch depending on execution result
+        // success  -> "next"
+        // failure  -> "fail"
         var branchKey = success ? "next" : "fail";
-        var targetCode = mergedMore.GetString(branchKey);
-        if (string.IsNullOrWhiteSpace(targetCode)) return null;
 
+        // Logical action code for the next job
+        var targetCode = mergedMore.GetString(branchKey);
+        if (string.IsNullOrWhiteSpace(targetCode))
+            return null;
+
+        // Extract prefixed overlay:
+        //   next_* or fail_* → forwarded into next job "more"
         var overlay = mergedMore.ExtractPrefixed(success ? "next_" : "fail_");
 
-        return new JsonObject
-        {
-            ["__branch"] = branchKey,
-            ["__code"] = targetCode,
-            ["__overlay"] = overlay
-        };
+        // Inject internal control fields used by the pipeline
+        overlay?["__code"] = targetCode;
+        overlay?["__success"] = success;
+
+        return overlay;
     }
 }
