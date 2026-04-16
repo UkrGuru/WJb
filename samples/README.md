@@ -32,11 +32,13 @@ The goal of these samples is to help you:
 
 Introductory samples covering the essential WJb concepts:
 
-| Sample          | Description                                              |
-| --------------- | -------------------------------------------------------- |
-| **HelloWJb**    | Minimal console app showing first job execution          |
-| **PriorityWJb** | Using priority-based queues                              |
+| Sample | Description |
+|------|------------|
+| **HelloWJb** | Minimal console app showing first job execution |
+| **PriorityWJb** | Using priority-based queues |
 | **WorkflowWJb** | Job chaining via `NextAsync` (explicit workflow routing) |
+| **CronWJb** | Cron-based scheduled job execution |
+
 
 Each sample:
 

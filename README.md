@@ -10,20 +10,20 @@ It focuses on one thing: **structured background job processing without heavy fr
 ## Requirements
 
 - **Target framework:** .NET 10+
-- **API contract:** v0.25 (frozen)
+- **API contract:** v0.26 (frozen)
 
-See: docs/api-v0.25.md
+See: docs/api-v0.26.md
 
 ---
 
-
 ## What is WJb?
 
-WJb provides a clean execution model for background jobs with:
+WJb provides a clean execution model for background jobs and workflows with:
 
 - Priority-based queues  
 - JSON-based payloads  
 - Cron-based scheduling  
+- Built-in support for job chaining and workflow-like execution  
 - Native integration with `IHostedService` and Dependency Injection  
 
 It is ideal for modern .NET applications that need background processing **without infrastructure bloat**.

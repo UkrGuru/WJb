@@ -11,7 +11,7 @@
         <AssemblyName>WJb</AssemblyName>
         <RootNamespace>WJb</RootNamespace>
         <PackageId>WJb</PackageId>
-        <Version>0.26.0-beta.1</Version>
+        <Version>0.26.0</Version>
 
         <!-- Deterministic build -->
         <Deterministic>true</Deterministic>

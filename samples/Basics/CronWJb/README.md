@@ -35,7 +35,7 @@ Example:
     "More": {
       "cron": "*/3 9-21 * * 1-5",
       "priority": "High",
-      "message": "Working hours ping (every 5 minutes, Mon–Fri)"
+      "message": "Working hours ping (every minute, Mon–Fri)"
     }
   }
 }
