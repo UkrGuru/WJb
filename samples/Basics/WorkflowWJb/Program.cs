@@ -33,7 +33,7 @@ using var host = Host.CreateDefaultBuilder(args)
 
 var jobs = host.Services.GetRequiredService<IJobProcessor>();
 
-var job = await jobs.CompactAsync("fib-start", new { from = 4, to = 8 });
+var job = await jobs.CompactAsync("fib-start", new { from = 10, to = 100 });
 
 await jobs.EnqueueJobAsync(job);
 
@@ -55,7 +55,8 @@ public sealed class FibonacciStartAction(ILogger<FibonacciStartAction> logger) :
         long a = 0;
         long b = 1;
 
-        for (int i = 0; i < from; i++)
+        // Advance until first Fibonacci value >= from
+        while (a < from)
         {
             var next = a + b;
             a = b;
@@ -67,15 +68,18 @@ public sealed class FibonacciStartAction(ILogger<FibonacciStartAction> logger) :
         more["next_a"] = a;
         more["next_b"] = b;
 
-        logger.LogInformation("Start Fibonacci from {Index}: a={A}, b={B}", from, a, b);
+        _logger.LogInformation(
+            "Start Fibonacci values in range [{From}..{To}]: a={A}, b={B}",
+            from, to, a, b
+        );
 
         return Task.CompletedTask;
     }
 }
 
-public sealed class FibonacciBuildAction(ILogger<FibonacciStartAction> logger) : IAction
+public sealed class FibonacciBuildAction(ILogger<FibonacciBuildAction> logger) : IAction
 {
-    private readonly ILogger<FibonacciStartAction> _logger = logger;
+    private readonly ILogger<FibonacciBuildAction> _logger = logger;
 
     public Task ExecAsync(JsonObject? more, CancellationToken _)
     {
@@ -83,13 +87,12 @@ public sealed class FibonacciBuildAction(ILogger<FibonacciStartAction> logger) :
 
         var from = more.GetInt64("from") ?? throw new ArgumentNullException("from");
         var to = more.GetInt64("to") ?? throw new ArgumentNullException("to");
-
         var a = more.GetInt64("a") ?? throw new ArgumentNullException("a");
         var b = more.GetInt64("b") ?? throw new ArgumentNullException("b");
 
         var values = new JsonArray();
 
-        for (long i = from; i <= to; i++)
+        while (a <= to)
         {
             values.Add(a);
 
@@ -98,9 +101,11 @@ public sealed class FibonacciBuildAction(ILogger<FibonacciStartAction> logger) :
             b = next;
         }
 
-        logger.LogInformation("Fibonacci [{From}..{To}] = {Result}", from, to, values.ToJsonString());
+        _logger.LogInformation(
+            "Fibonacci values [{From}..{To}] = {Result}",
+            from, to, values.ToJsonString()
+        );
 
         return Task.CompletedTask;
     }
 }
-

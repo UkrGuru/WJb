@@ -1,7 +1,6 @@
 ﻿using System.Text.Json.Nodes;
-using WJb.Extensions;
 
-namespace WJb.Helpers.Tests;
+namespace WJb.Extensions.Tests;
 
 public sealed class NextExtractorTests
 {

@@ -1,133 +1,138 @@
-# Workflow WJb – Minimal Example
+# Fibonacci Value-Range Workflow Sample
 
-This example demonstrates a **minimal job workflow** using **WJb**, where the execution order is defined declaratively and each action can automatically enqueue the next action.
+This sample demonstrates a **single, concrete WorkflowWJb scenario**:
 
-The example is intentionally compact and uses the modern `AddWJb(...)` registration style.
+> Generate all Fibonacci numbers whose **values** are within a given range `[from..to]`.
 
----
-
-## What happens
-
-1. A generic host is started
-2. A workflow definition is registered via `ActionItem`
-3. The first job (`first`) is compacted and enqueued
-4. `FirstAction` runs
-5. The workflow automatically schedules `SecondAction`
-6. `SecondAction` runs
-
-Execution order is strictly controlled by the workflow configuration.
+This README documents **only this sample**. It is intentionally limited in scope and does not describe WorkflowWJb in general.
 
 ---
 
-## Workflow definition
+## What this sample does
 
-Actions and their relationships are defined up-front:
+Input parameters:
+
+```text
+from = 10
+to   = 100
+```
+
+Result produced by the workflow:
+
+```text
+[13, 21, 34, 55, 89]
+```
+
+The workflow consists of **two actions**:
+
+1. `FibonacciStartAction`
+2. `FibonacciBuildAction`
+
+Only the **first job** is enqueued manually.
+
+---
+
+## Workflow structure
+
+```text
+fib-start  -->  fib-build
+```
+
+- `fib-start` prepares the Fibonacci state
+- `fib-build` generates all result values
+
+No branching, no conditions, no alternative paths.
+
+---
+
+## FibonacciStartAction
+
+Purpose:
+
+- Read `from` / `to` (value bounds)
+- Walk the Fibonacci sequence forward
+- Stop at the **first Fibonacci number where `a >= from`**
+- Pass this state to the next action
+
+Core invariant:
+
+```text
+a is the first Fibonacci value >= from
+```
+
+Relevant logic:
 
 ```csharp
-var actions = new Dictionary<string, ActionItem>
+long a = 0;
+long b = 1;
+
+while (a < from)
 {
-    ["first"] = new ActionItem
-    {
-        Type = "FirstAction, WorkflowWJb",
-        More = new JsonObject { ["next"] = "second" }
-    },
-    ["second"] = new ActionItem
-    {
-        Type = "SecondAction, WorkflowWJb"
-    }
-};
+    var next = a + b;
+    a = b;
+    b = next;
+}
 ```
 
-- `Type` specifies the action implementation
-- `More["next"]` declares the next step in the workflow
-- No external coordinator is required
+After this loop:
+
+```text
+a >= from
+(a, b) is a valid consecutive Fibonacci pair
+```
+
+This ensures the build step starts at the **correct value**, not at index zero.
 
 ---
 
-## Service registration
+## FibonacciBuildAction
+
+Purpose:
+
+- Generate Fibonacci numbers **by value**
+- Emit each value starting from `a`
+- Stop when the value exceeds `to`
+
+Core loop:
 
 ```csharp
-services.AddWJb(actions);
+while (a <= to)
+{
+    values.Add(a);
+    var next = a + b;
+    a = b;
+    b = next;
+}
 ```
 
-`AddWJb` registers:
-- the job processor
-- the action factory
-- workflow metadata
-- the hosted background service
+This guarantees:
+
+- No index-based interpretation
+- No overflow caused by large indices
+- Deterministic, bounded execution
 
 ---
 
-## Starting the workflow
+## Execution
+
+The job is started like this:
 
 ```csharp
-var jobs = host.Services.GetRequiredService<IJobProcessor>();
+var job = await jobs.CompactAsync(
+    "fib-start",
+    new { from = 10, to = 100 }
+);
 
-var job = await jobs.CompactAsync("first");
 await jobs.EnqueueJobAsync(job);
 ```
 
-Only the **first job** is enqueued manually. All subsequent steps are derived from the workflow definition.
-
----
-
-## Actions
-
-### First action
-
-```csharp
-public sealed class FirstAction(
-    ILogger<FirstAction> logger,
-    IJobProcessor jobs) : IAction
-{
-    public Task ExecAsync(JsonObject? _, CancellationToken __)
-    {
-        logger.LogInformation("First action executed");
-        return Task.CompletedTask;
-    }
-}
-```
-
-### Second action
-
-```csharp
-public sealed class SecondAction(
-    ILogger<SecondAction> logger) : IAction
-{
-    public Task ExecAsync(JsonObject? _, CancellationToken __)
-    {
-        logger.LogInformation("Second action executed");
-        return Task.CompletedTask;
-    }
-}
-```
-
-- Actions only implement `ExecAsync`
-- Workflow progression is driven by metadata (`More.next`), not code
-
----
-
-## Run
-
-```bash
-dotnet run
-```
-
-Expected output:
+Expected log output:
 
 ```text
-JobProcessor started
-First action executed
-Second action executed
+info: WJb.JobProcessor[0] JobProcessor started
+info: FibonacciStartAction[0] Start Fibonacci values in range [10..100]: a=13, b=21
+info: FibonacciBuildAction[0] Fibonacci values [10..100] = [13,21,34,55,89]```
 ```
 
 ---
 
-## Summary
-
-- The workflow starts with a single job
-- Each action automatically schedules the next one
-- No manual chaining logic inside actions
-- Flow control lives in declarative workflow metadata
-
-This is the **simplest recommended workflow pattern** in WJb.
