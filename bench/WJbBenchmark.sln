@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.5.11709.299 stable
+VisualStudioVersion = 18.5.11709.299
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WJbBenchmark", "WJbBenchmark.csproj", "{976254B4-3C09-F6D7-3FFB-4585E9553B6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WJb.Pro", "..\..\!!WJb.Pro\src\WJb\WJb.Pro.csproj", "{5999D2DF-FFB2-3D60-B7C6-DDEA7BD43F91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,11 +17,15 @@ Global
 		{976254B4-3C09-F6D7-3FFB-4585E9553B6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{976254B4-3C09-F6D7-3FFB-4585E9553B6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{976254B4-3C09-F6D7-3FFB-4585E9553B6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5999D2DF-FFB2-3D60-B7C6-DDEA7BD43F91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5999D2DF-FFB2-3D60-B7C6-DDEA7BD43F91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5999D2DF-FFB2-3D60-B7C6-DDEA7BD43F91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5999D2DF-FFB2-3D60-B7C6-DDEA7BD43F91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {B46D3A76-5CD9-493E-8149-A973244D5A81}
+		SolutionGuid = {D1C09962-2840-4CF4-A88E-13E9FA8C9DBD}
 	EndGlobalSection
 EndGlobal
