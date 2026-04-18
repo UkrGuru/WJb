@@ -9,11 +9,6 @@ public sealed class ActionFactory : IActionFactory
     private readonly Dictionary<string, ActionItem> _actions;
 
     /// <summary>
-    /// Raised when action configuration is reloaded.
-    /// </summary>
-    public event Action? Reloaded;
-
-    /// <summary>
     /// Creates a new <see cref="ActionFactory"/> instance.
     /// </summary>
     public ActionFactory(IServiceProvider services, IDictionary<string, ActionItem>? actions = default)
@@ -43,15 +38,7 @@ public sealed class ActionFactory : IActionFactory
     /// </summary>
     public ActionItem GetActionItem(string actionCode)
         => _actions[actionCode];
-
-    /// <summary>
-    /// Reloads action configuration at runtime.
-    /// </summary>
-    public void Reload(IDictionary<string, ActionItem> newConfig)
-    {
-        // Available only in the commercial edition.
-    }
-
+    
     /// <summary>
     /// Returns a snapshot of the current action configuration.
     /// </summary>

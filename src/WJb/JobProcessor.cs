@@ -8,11 +8,24 @@ namespace WJb;
 /// <summary>
 /// Background job processor that executes queued jobs.
 /// </summary>
-public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger<JobProcessor> logger) : BackgroundService, IJobProcessor
+/// 
+public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger<JobProcessor> logger, ISettingsRegistry? settings = default) : BackgroundService, IJobProcessor
 {
     private readonly IJobQueue _queue = queue ?? throw new ArgumentNullException(nameof(queue));
     private readonly IActionFactory _factory = actionFactory ?? throw new ArgumentNullException(nameof(actionFactory));
     private readonly ILogger<JobProcessor> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    // Settings snapshot:
+    // - Read once at construction time
+    // - Application restart required to apply changes
+    // - Hot reload is NOT supported in FREE edition
+    private readonly ISettingsRegistry _settings = settings ?? SettingsRegistry.Empty;
+
+    // NOTE:
+    // Settings are read once at construction time.
+    // Changes require application restart.
+    // Hot reload is NOT supported in FREE edition.
+    // Any runtime parallelism is fixed at startup.
 
     // ------------------------------- IJobProcessor -------------------------------
 

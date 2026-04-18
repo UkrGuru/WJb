@@ -5,6 +5,7 @@
 
 # Test results
 TestResults/
+*.slnx
 
 # User-specific files
 *.rsuser

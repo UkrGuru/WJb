@@ -28,33 +28,37 @@ class Program
             .ConfigureLogging(logging =>
             {
                 logging.ClearProviders();
-                logging.SetMinimumLevel(LogLevel.None);   // Try to kill all noise
+                logging.AddConsole();
+                logging.SetMinimumLevel(LogLevel.Information);
             })
-            .ConfigureServices(services => services.AddWJb(actions))
+            .ConfigureServices(services =>
+            {
+                services.AddWJb(actions, addScheduler: true);
+            })
             .Build();
 
-        // Small delay to let WJb internal logging finish
+        // ✅ This starts ALL hosted services, including JobProcessor
         await host.StartAsync();
-        await Task.Delay(100);
-
-        var jobs = host.Services.GetRequiredService<IJobProcessor>();
 
         Console.WriteLine("WJb initialized.\n");
 
-        await RunMultiThreadedEnqueue(jobs, 200_000, 8);
-        await RunSingleThreadEnqueue(jobs, 100_000);
-        await RunHeavyPayload(jobs, 20_000);
-        await RunDelayedJobs(jobs, 10_000);
+        var jobs = host.Services.GetRequiredService<IJobProcessor>();
+
+        await RunMultiThreadedEnqueue(jobs, 2_000, 8);
+        await RunSingleThreadEnqueue(jobs, 1_000);
+        await RunHeavyPayload(jobs, 2_000);
+        await RunDelayedJobs(jobs, 1_000);
 
         Console.WriteLine("✅ Benchmark suite completed.");
+
         await host.StopAsync();
     }
 
     static async Task RunMultiThreadedEnqueue(IJobProcessor jobs, int totalJobs, int threadCount)
     {
         Console.WriteLine($"[Multi-threaded Enqueue] {totalJobs:N0} jobs from {threadCount} threads");
-        var sw = Stopwatch.StartNew();
 
+        var sw = Stopwatch.StartNew();
         var tasks = new Task[threadCount];
         int jobsPerThread = totalJobs / threadCount;
 
@@ -65,13 +69,17 @@ class Program
             {
                 for (int i = 0; i < jobsPerThread; i++)
                 {
-                    var job = await jobs.CompactAsync("benchmark", new { Thread = threadId, Id = i });
+                    var job = await jobs.CompactAsync(
+                        "benchmark",
+                        new { Thread = threadId, Id = i });
+
                     await jobs.EnqueueJobAsync(job);
                 }
             });
         }
 
         await Task.WhenAll(tasks);
+
         sw.Stop();
         PrintResult(totalJobs, sw.Elapsed);
     }
@@ -79,6 +87,7 @@ class Program
     static async Task RunSingleThreadEnqueue(IJobProcessor jobs, int count)
     {
         Console.WriteLine($"[Single-thread Enqueue] {count:N0} jobs");
+
         var sw = Stopwatch.StartNew();
 
         for (int i = 0; i < count; i++)
@@ -94,6 +103,7 @@ class Program
     static async Task RunHeavyPayload(IJobProcessor jobs, int count)
     {
         Console.WriteLine($"[Heavy JSON Payload] {count:N0} jobs");
+
         var sw = Stopwatch.StartNew();
 
         for (int i = 0; i < count; i++)
@@ -103,7 +113,11 @@ class Program
                 Id = i,
                 Time = DateTime.UtcNow,
                 Data = Enumerable.Range(1, 100).ToArray(),
-                Nested = new { Name = "Test", Values = new[] { 10, 20, 30 } }
+                Nested = new
+                {
+                    Name = "Test",
+                    Values = new[] { 10, 20, 30 }
+                }
             };
 
             var job = await jobs.CompactAsync("benchmark", payload);
@@ -117,11 +131,15 @@ class Program
     static async Task RunDelayedJobs(IJobProcessor jobs, int count)
     {
         Console.WriteLine($"[Delayed/Timer Jobs] {count:N0} jobs");
+
         var sw = Stopwatch.StartNew();
 
         for (int i = 0; i < count; i++)
         {
-            var job = await jobs.CompactAsync("benchmark", new { Id = i, Type = "delayed" });
+            var job = await jobs.CompactAsync(
+                "benchmark",
+                new { Id = i, Type = "delayed" });
+
             await jobs.EnqueueJobAsync(job);
         }
 
@@ -133,7 +151,9 @@ class Program
     {
         var ms = elapsed.TotalMilliseconds;
         var throughput = count / (ms / 1000.0);
-        Console.WriteLine($"    → {ms:F2} ms  |  {throughput:F0} jobs/sec\n");
+
+        Console.WriteLine(
+            $" → {ms:F2} ms | {throughput:F0} jobs/sec\n");
     }
 }
 

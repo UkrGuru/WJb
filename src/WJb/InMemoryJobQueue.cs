@@ -66,12 +66,4 @@ public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQue
             await completed.ConfigureAwait(false);
         }
     }
-
-    /// <summary>
-    /// Releases a processing slot for the specified priority.
-    /// </summary>
-    public void ReleaseSlot(Priority priority)
-    {
-        // Available only in the commercial edition.
-    }
 }

@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37203.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CronWJb", "Basics\CronWJb\CronWJb.csproj", "{BECFD8F1-CBE0-4574-B88B-BD783DFD9A31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelloWJb", "Basics\HelloWJb\HelloWJb.csproj", "{834E6291-C92A-39E4-9295-9C7C823C02CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PriorityWJb", "Basics\PriorityWJb\PriorityWJb.csproj", "{9984151A-A095-C2C1-B367-6FCFDDE93702}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkflowWJb", "Basics\WorkflowWJb\WorkflowWJb.csproj", "{85B22980-4B33-B5E6-E171-F7F9DAA3FF2C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BECFD8F1-CBE0-4574-B88B-BD783DFD9A31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BECFD8F1-CBE0-4574-B88B-BD783DFD9A31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BECFD8F1-CBE0-4574-B88B-BD783DFD9A31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BECFD8F1-CBE0-4574-B88B-BD783DFD9A31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{834E6291-C92A-39E4-9295-9C7C823C02CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{834E6291-C92A-39E4-9295-9C7C823C02CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{834E6291-C92A-39E4-9295-9C7C823C02CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{834E6291-C92A-39E4-9295-9C7C823C02CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9984151A-A095-C2C1-B367-6FCFDDE93702}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9984151A-A095-C2C1-B367-6FCFDDE93702}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9984151A-A095-C2C1-B367-6FCFDDE93702}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9984151A-A095-C2C1-B367-6FCFDDE93702}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85B22980-4B33-B5E6-E171-F7F9DAA3FF2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85B22980-4B33-B5E6-E171-F7F9DAA3FF2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85B22980-4B33-B5E6-E171-F7F9DAA3FF2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85B22980-4B33-B5E6-E171-F7F9DAA3FF2C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -80,11 +80,4 @@ public sealed class JobScheduler(
     /// <inheritdoc/>
     public bool IsDue(string? cron, DateTime now)
         => CronHelper.CronValidate(cron, now);
-
-    /// <inheritdoc/>
-    public Task ReloadAsync(CancellationToken stoppingToken = default)
-    {
-        // Available only in the commercial edition.
-        return Task.CompletedTask;
-    }
 }

@@ -14,9 +14,4 @@ public interface IJobScheduler
     /// Determines whether a cron expression is due at the specified time.
     /// </summary>
     bool IsDue(string? cron, DateTime now);
-
-    /// <summary>
-    /// Reloads scheduler configuration.
-    /// </summary>
-    Task ReloadAsync(CancellationToken stoppingToken = default);
 }
