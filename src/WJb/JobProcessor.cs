@@ -14,6 +14,11 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
     private readonly IJobQueue _queue = queue ?? throw new ArgumentNullException(nameof(queue));
     private readonly IActionFactory _factory = actionFactory ?? throw new ArgumentNullException(nameof(actionFactory));
     private readonly ILogger<JobProcessor> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    // Settings snapshot:
+    // - Read once at construction time
+    // - Application restart required to apply changes
+    // - Hot reload is NOT supported in FREE edition
     private readonly ISettingsRegistry _settings = settings ?? SettingsRegistry.Empty;
 
     // ------------------------------- IJobProcessor -------------------------------
