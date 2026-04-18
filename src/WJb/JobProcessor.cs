@@ -21,6 +21,12 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
     // - Hot reload is NOT supported in FREE edition
     private readonly ISettingsRegistry _settings = settings ?? SettingsRegistry.Empty;
 
+    // NOTE:
+    // Settings are read once at construction time.
+    // Changes require application restart.
+    // Hot reload is NOT supported in FREE edition.
+    // Any runtime parallelism is fixed at startup.
+
     // ------------------------------- IJobProcessor -------------------------------
 
     /// <summary>

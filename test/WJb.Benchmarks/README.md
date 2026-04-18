@@ -39,6 +39,23 @@ These semantics are **intentional** and **verified by executable contracts**.
 
 ---
 
+## Runtime Parallelism (Contract)
+
+Runtime job processing parallelism follows strict rules:
+
+- Parallel execution may be supported.
+- Parallelism degree is fixed at application startup.
+- Configuration is read once from ISettingsRegistry.
+- Application restart is required to apply changes.
+- Hot reload is not supported in FREE edition.
+- No ordering guarantees exist between parallel jobs.
+- Queue priority ordering applies only at dequeue time.
+
+Any runtime parallelism implementation must be justified
+by runtime benchmarks and must not degrade ingest guarantees.
+
+---
+
 ## Engineering Principles (Non‑Negotiable)
 
 ### 0. Baseline Rule (Fixed Forever)
