@@ -8,11 +8,13 @@ namespace WJb;
 /// <summary>
 /// Background job processor that executes queued jobs.
 /// </summary>
-public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger<JobProcessor> logger) : BackgroundService, IJobProcessor
+/// 
+public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger<JobProcessor> logger, ISettingsRegistry? settings = default) : BackgroundService, IJobProcessor
 {
     private readonly IJobQueue _queue = queue ?? throw new ArgumentNullException(nameof(queue));
     private readonly IActionFactory _factory = actionFactory ?? throw new ArgumentNullException(nameof(actionFactory));
     private readonly ILogger<JobProcessor> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ISettingsRegistry _settings = settings ?? SettingsRegistry.Empty;
 
     // ------------------------------- IJobProcessor -------------------------------
 
