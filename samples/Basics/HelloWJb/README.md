@@ -1,74 +1,36 @@
-# **1stWJb – Minimal Console App**
+# HelloWJb
 
-The simplest example showing how to enqueue and execute a job using **WJb**.
+A minimal console application demonstrating how to run a background job
+using **WJb (Free edition)**.
 
-***
+This project is intentionally simple and serves as a **hello-world**
+entry point for WJb.
 
-## How it works
+---
 
-### Register actions and job processor
+## Requirements
 
-```csharp
-services.AddSingleton<PrintAction>();
+- .NET 8 or higher
+- WJb (Free edition)
 
-services.AddSingleton<IActionFactory>(sp =>
-    new ActionFactory(sp,
-        new Dictionary<string, ActionItem>
-        {
-            ["print"] = new ActionItem(
-                typeof(PrintAction).AssemblyQualifiedName!,
-                null)
-        }));
+---
 
-services.AddSingleton<JobProcessor>();
-services.AddSingleton<IJobProcessor>(
-    sp => sp.GetRequiredService<JobProcessor>());
-services.AddHostedService(
-    sp => sp.GetRequiredService<JobProcessor>());
-```
+## What this example does
 
-*   Actions are identified by a string (`"print"`)
-*   `JobProcessor` runs as a hosted service
+1. Registers a single action (`PrintAction`)
+2. Creates a background job with a small payload
+3. Enqueues the job on application startup
+4. Executes the job using WJb’s hosted worker
 
-***
+---
 
-### Enqueue a job at startup
+## How to run
 
-```csharp
-var jobs = host.Services.GetRequiredService<IJobProcessor>();
+```bash
+dotnet run
+``
 
-var job = await jobs.CompactAsync(
-    "print",
-    new { text = "Hello WJb!" });
-
-await jobs.EnqueueJobAsync(job);
-```
-
-This creates and enqueues a job before the host starts running.
-
-***
-
-### Action implementation
-
-```csharp
-public sealed class PrintAction(ILogger<PrintAction> logger) : IAction
-{
-    public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
-    {
-        var text = jobMore?["text"]?.GetValue<string>() ?? "<empty>";
-        logger.LogInformation(text);
-        return Task.CompletedTask;
-    }
-}
-```
-
-*   Actions implement `IAction`
-*   `jobMore` contains the job data
-*   Logging uses `ILogger`
-
-***
-
-## 📌 **Output**
+Example output order:
 
 ```text
 info: WJb.JobProcessor[0] JobProcessor started

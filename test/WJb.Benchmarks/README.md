@@ -14,7 +14,7 @@ no feature is accepted without measurable justification.
 
 Measured on modern desktop hardware (Release, x64, core‑only).
 
-- **Single‑thread ingest**: **~500k+ jobs/sec**
+- **Single‑thread ingest**: **~700k+ jobs/sec**
 - **Multi‑thread ingest (shared queue, ~20 threads)**: **~2M+ jobs/sec**
 
 These numbers are enforced by executable benchmarks.
@@ -160,6 +160,40 @@ Includes:
 
 This benchmark is **documentation‑oriented**, not optimization‑oriented.
 
+---
+
+## 📌 **Output**
+
+```text
+WJb Enqueue Baseline Benchmark (Core, No DI)
+===========================================
+
+Jobs        : 1,000,000
+Time        : 1.38 sec
+Throughput  : 727,117 jobs/sec
+
+✅ Enqueue baseline PASSED
+
+
+WJb Multi-thread Enqueue Baseline (Core, No DI)
+===============================================
+
+Threads     : 20
+Total jobs  : 1,000,000
+Time        : 0.56 sec
+Throughput  : 1,796,933 jobs/sec
+
+✅ Multi-thread enqueue baseline PASSED
+
+
+WJb Queue Semantics Benchmarks (Strict Priority)
+===============================================
+
+✔ FIFO within same priority  
+✔ Strict priority precedence  
+
+✅ All queue semantics benchmarks PASSED
+```
 ---
 
 ## Repository Layout

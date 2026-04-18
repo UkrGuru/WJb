@@ -47,13 +47,13 @@ public static class QueueSemanticsBenchmarks
         await queue.EnqueueAsync("C", Priority.Normal);
 
         var (j1, p1) = await queue.DequeueNextAsync(CancellationToken.None);
-        queue.ReleaseSlot(p1);
+        //queue.ReleaseSlot(p1);
 
         var (j2, p2) = await queue.DequeueNextAsync(CancellationToken.None);
-        queue.ReleaseSlot(p2);
+        //queue.ReleaseSlot(p2);
 
         var (j3, p3) = await queue.DequeueNextAsync(CancellationToken.None);
-        queue.ReleaseSlot(p3);
+        //queue.ReleaseSlot(p3);
 
         if (j1 != "A" || j2 != "B" || j3 != "C")
         {
@@ -83,7 +83,7 @@ public static class QueueSemanticsBenchmarks
         await queue.EnqueueAsync("low-2", Priority.Low);
 
         var (job, prio) = await queue.DequeueNextAsync(CancellationToken.None);
-        queue.ReleaseSlot(prio);
+        //queue.ReleaseSlot(prio);
 
         if (job != "high-1" || prio != Priority.High)
         {

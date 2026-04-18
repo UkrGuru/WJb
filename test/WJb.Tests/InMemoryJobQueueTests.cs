@@ -78,17 +78,6 @@ public sealed class InMemoryJobQueueTests
             queue.DequeueNextAsync(cts.Token));
     }
 
-    [Fact]
-    public void ReleaseSlot_Does_Not_Throw()
-    {
-        var queue = CreateQueue();
-
-        queue.ReleaseSlot(Priority.ASAP);
-        queue.ReleaseSlot(Priority.High);
-        queue.ReleaseSlot(Priority.Normal);
-        queue.ReleaseSlot(Priority.Low);
-    }
-
     /* =======================
        Helpers
        ======================= */
