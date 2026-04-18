@@ -19,15 +19,9 @@
         <!-- Strong-name signing -->
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>..\..\..\UkrGuru.snk</AssemblyOriginatorKeyFile>
-
-        <!-- Author / ownership -->
         <Company>PE VIKTOR Oleksandr Oleksandrovych</Company>
         <Authors>UkrGuru</Authors>
         <Copyright>PE VIKTOR Oleksandr Oleksandrovych</Copyright>
-
-        <!-- Project / repository metadata -->
-        <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://github.com/UkrGuru/WJb</RepositoryUrl>
         <PackageProjectUrl>https://github.com/UkrGuru/WJb</PackageProjectUrl>
 
         <!-- NuGet package content -->
