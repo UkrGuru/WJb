@@ -31,6 +31,7 @@ public static class NextExtractor
         var overlay = mergedMore.ExtractPrefixed(success ? "next_" : "fail_");
 
         // Inject internal control fields used by the pipeline
+        overlay?["__branch"] = branchKey;
         overlay?["__code"] = targetCode;
         overlay?["__success"] = success;
 

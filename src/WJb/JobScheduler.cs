@@ -10,7 +10,7 @@ namespace WJb;
 /// </summary>
 public sealed class JobScheduler(
     IJobQueue jobQueue,
-    IActionFactory factory, // ← single dependency (factory + reload interface)
+    IActionFactory factory, 
     IJobProcessor jobProcessor,
     ILogger<JobScheduler> logger) : BackgroundService, IJobScheduler
 {
@@ -47,12 +47,10 @@ public sealed class JobScheduler(
                     // 2. Enqueue it with the priority resolved from action metadata
                     foreach (var (code, item) in due)
                     {
-                        var job = await _jobProcessor
-                            .CompactAsync(code, null, stoppingToken)
+                        var job = await _jobProcessor.CompactAsync(code, null, stoppingToken)
                             .ConfigureAwait(false);
 
-                        await _jobQueue
-                            .EnqueueAsync(job, item.More.GetPriority(), stoppingToken)
+                        await _jobQueue.EnqueueAsync(job, item.More.GetPriority(), stoppingToken)
                             .ConfigureAwait(false);
                     }
 

@@ -26,8 +26,8 @@ public interface IJobProcessor
         CancellationToken stoppingToken = default);
 
     /// <summary>
-    /// Expands a job payload into action type and metadata.
+    /// Expands a job payload into action code and metadata.
     /// </summary>
-    Task<(string Type, JsonObject More)> ExpandAsync(string job,
+    Task<(string Code, JsonObject More)> ExpandAsync(string job,
         CancellationToken stoppingToken = default);
 }

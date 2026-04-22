@@ -8,7 +8,7 @@ public interface IActionFactory : IActionRegistry
     /// <summary>
     /// Creates an action instance by CLR type name.
     /// </summary>
-    IAction Create(string actionType);
+    IAction Create(string actionCode);
 
     /// <summary>
     /// Returns action metadata by logical action code.
