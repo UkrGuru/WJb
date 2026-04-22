@@ -36,60 +36,45 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
         => await _queue.EnqueueAsync(job, priority, stoppingToken).ConfigureAwait(false);
 
     /// <summary>
-    /// Processes a single job with optional chaining.
+    /// Processes a single job by executing the resolved action.
     /// </summary>
-    public async Task ProcessJobAsync(string job, Priority priority = Priority.Normal, CancellationToken stoppingToken = default)
+    public async Task ProcessJobAsync(string job, CancellationToken stoppingToken = default)
     {
-        bool success = true;
-        string? actionType = null; JsonObject? mergedMore = null;
+        // Design principle:
+        // Simplicity → Explicitness → Extensibility
+        //
+        // Invariant:
+        // - One job = one action execution
+        // - No implicit chaining or routing
+        //
+        // Responsibility boundary:
+        // - JobProcessor: execution only
+        // - Workflow: explicit via WorkflowAction
 
         try
         {
-            // Expand job payload into:
-            // - concrete action CLR type
-            // - merged "more" object (action defaults + job overrides)
+            // - action code
+            // - merged metadata (action defaults + job override)
             var expanded = await ExpandAsync(job, stoppingToken).ConfigureAwait(false);
-            actionType = expanded.Type; mergedMore = expanded.More;
+
+            var actionCode = expanded.Code; 
+            var execMore = expanded.More?.DeepClone() as JsonObject ?? [];
 
             // Execute the action
-            await JobProcessCoreAsync(actionType, mergedMore, stoppingToken).ConfigureAwait(false);
+            var action = _factory.Create(actionCode);
+            await action.ExecAsync(execMore, stoppingToken).ConfigureAwait(false);
+
+            _logger.LogInformation("ProcessJobAsync done. RawJob: {Job}", job);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
             // Cooperative cancellation: treat as non-successful execution
             _logger.LogInformation("ProcessJobAsync canceled. RawJob: {Job}", job);
-            success = false;
         }
         catch (Exception ex)
         {
             // Action failure: log and mark execution as failed
             _logger.LogError(ex, "ProcessJobAsync crashed. RawJob: {Job}", job);
-            success = false;
-        }
-        finally
-        {
-            // Preserve existing Next chaining semantics:
-            // If the action defines a "next" step, enqueue it regardless of success,
-            // letting the extractor decide based on the success flag.
-            try
-            {
-                if (actionType is not null && mergedMore is not null)
-                {
-                    var nextMore = NextExtractor.ExtractNextMore(mergedMore, success);
-                    if (nextMore is not null)
-                    {
-                        var nextCode = nextMore.GetString("__code")!;
-                        var nextJob = await CompactAsync(nextCode, nextMore, stoppingToken).ConfigureAwait(false);
-
-                        await EnqueueJobAsync(nextJob, priority, stoppingToken).ConfigureAwait(false);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // Errors in Next handling must not break the worker loop
-                _logger.LogError(ex, "ProcessJobAsync Next crashed. RawJob: {Job}", job);
-            }
         }
     }
 
@@ -108,9 +93,9 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
     }
 
     /// <summary>
-    /// Expands a job payload into action type and merged metadata.
+    /// Expands a job payload into action code and merged metadata.
     /// </summary>
-    public Task<(string Type, JsonObject More)> ExpandAsync(string job, CancellationToken stoppingToken = default)
+    public Task<(string Code, JsonObject More)> ExpandAsync(string job, CancellationToken stoppingToken = default)
     {
         // Parse raw job JSON
         var node = JsonNode.Parse(job)!.AsObject();
@@ -129,7 +114,7 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
         // (job values win)
         MoreExtensions.MergeInto(mergedMore, more);
 
-        return Task.FromResult((item.Type, mergedMore));
+        return Task.FromResult((Code: code, More: mergedMore));
     }
 
     /// <summary>
@@ -146,16 +131,7 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
             var (job, prio) = await _queue.DequeueNextAsync(stoppingToken).ConfigureAwait(false);
 
             // Process job end-to-end, including possible chaining
-            await ProcessJobAsync(job, prio, stoppingToken).ConfigureAwait(false);
+            await ProcessJobAsync(job, stoppingToken).ConfigureAwait(false);
         }
-    }
-
-    /// <summary>
-    /// Executes a single action instance.
-    /// </summary>
-    protected virtual async Task JobProcessCoreAsync(string actionType, JsonObject mergedMore, CancellationToken stoppingToken)
-    {
-        var action = _factory.Create(actionType);
-        await action.ExecAsync(mergedMore, stoppingToken).ConfigureAwait(false);
     }
 }

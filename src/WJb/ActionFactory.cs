@@ -19,16 +19,23 @@ public sealed class ActionFactory : IActionFactory
     }
 
     /// <summary>
-    /// Creates an <see cref="IAction"/> by its fully qualified type name.
+    /// Creates an <see cref="IAction"/> by action code.
     /// </summary>
-    public IAction Create(string actionType)
+    public IAction Create(string actionCode)
     {
-        var type = Type.GetType(actionType)
-            ?? throw new InvalidOperationException($"Action type '{actionType}' was not found.");
+        if (!_actions.TryGetValue(actionCode, out var item))
+            throw new InvalidOperationException(
+                $"Action with code '{actionCode}' is not registered.");
 
-        var action =_services.GetService(type) as IAction
+        var type = Type.GetType(item.Type)
+            ?? throw new InvalidOperationException(
+                $"Action type '{item.Type}' was not found.");
+
+        var action =
+            _services.GetService(type) as IAction
             ?? Activator.CreateInstance(type) as IAction
-            ?? throw new InvalidOperationException($"Could not create instance of '{type.FullName}' as IAction.");
+            ?? throw new InvalidOperationException(
+                $"Could not create instance of '{type.FullName}' as IAction.");
 
         return action;
     }

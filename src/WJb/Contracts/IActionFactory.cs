@@ -6,7 +6,7 @@
 public interface IActionFactory : IActionRegistry
 {
     /// <summary>
-    /// Creates an action instance by CLR type name.
+    /// Expands a job payload into an action code and metadata.
     /// </summary>
     IAction Create(string actionCode);
 
