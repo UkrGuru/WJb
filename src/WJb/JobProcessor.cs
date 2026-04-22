@@ -64,7 +64,7 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
             var action = _factory.Create(actionCode);
             await action.ExecAsync(execMore, stoppingToken).ConfigureAwait(false);
 
-            _logger.LogInformation("ProcessJobAsync done. RawJob: {Job}", job);
+            _logger.LogDebug("ProcessJobAsync done. RawJob: {Job}", job);
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using WJb.Actions;
 
-public sealed class WorkflowAction : WorkflowActionBase
+public class WorkflowAction : WorkflowActionBase
 {
     protected override Task ExecCoreAsync(JsonObject? jobMore, CancellationToken stoppingToken) 
     {
