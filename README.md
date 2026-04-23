@@ -17,8 +17,8 @@ WJb focuses on one thing:
 ## Requirements
 
 - **Target framework:** .NET 8+
-- **API contract:** v0.27 (frozen)  
-  See: `docs/api-v0.27.md`
+- **API contract:** v0.28 (frozen)  
+  See: `docs/api-v0.28.md`
 
 ---
 
@@ -117,34 +117,27 @@ they must be handled explicitly by application logic.
 
 ## Licensing
 
-WJb is distributed in **two mutually exclusive editions**:
+### Open Source License (Free Edition)
 
-- **WJb** — Open Source Edition (Apache License 2.0)
-- **WJb.Pro** — Commercial Edition
-
-Both editions:
-- Share the same public API
-- Use identical namespaces
-- Are source-compatible
-
-Only **one edition** may be referenced per application.
-
-### Open Source Edition — WJb
-
-Licensed under the **Apache License 2.0**.
+**Apache License 2.0**
 
 Suitable for:
+
 - Open-source projects
 - Internal or non-commercial usage
 - Evaluation and prototyping
 
-### Commercial Edition — WJb.Pro
+### Commercial License (WJb.Pro)
 
-WJb.Pro is the commercial edition intended for production and commercial use.
+A Commercial License is required if you intend to:
 
-Commercial licensing, pricing, and purchasing options are available on the official website:
+- Use WJb in a closed-source commercial product
+- Offer WJb as part of a SaaS or hosted solution
+- Redistribute it as part of a paid product or service
+- Require enterprise usage, support, or SLA
 
-👉 https://wjb.ukrguru.dev
+For commercial licensing inquiries:
+📧 **ukrguru@gmail.com**
 
 ---
 

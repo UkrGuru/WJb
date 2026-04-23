@@ -8,10 +8,7 @@ namespace WJb;
 /// <summary>
 /// Background scheduler that enqueues jobs based on cron configuration.
 /// </summary>
-public sealed class JobScheduler(
-    IJobQueue jobQueue,
-    IActionFactory factory, 
-    IJobProcessor jobProcessor,
+public sealed class JobScheduler(IJobQueue jobQueue, IActionFactory factory, IJobProcessor jobProcessor,
     ILogger<JobScheduler> logger) : BackgroundService, IJobScheduler
 {
     private readonly IJobQueue _jobQueue = jobQueue ?? throw new ArgumentNullException(nameof(jobQueue));

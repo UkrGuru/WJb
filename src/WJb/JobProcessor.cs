@@ -8,8 +8,10 @@ namespace WJb;
 /// <summary>
 /// Background job processor that executes queued jobs.
 /// </summary>
-/// 
-public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger<JobProcessor> logger, ISettingsRegistry? settings = default) : BackgroundService, IJobProcessor
+public class JobProcessor(IJobQueue queue,
+                          IActionFactory actionFactory,
+                          ILogger<JobProcessor> logger,
+                          ISettingsRegistry? settings = default) : BackgroundService, IJobProcessor
 {
     private readonly IJobQueue _queue = queue ?? throw new ArgumentNullException(nameof(queue));
     private readonly IActionFactory _factory = actionFactory ?? throw new ArgumentNullException(nameof(actionFactory));
@@ -30,10 +32,49 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
     // ------------------------------- IJobProcessor -------------------------------
 
     /// <summary>
+    /// Compacts an action code and metadata into a job payload.
+    /// </summary>
+    public Task<string> CompactAsync(string actionCode, object? jobMore = null, CancellationToken stoppingToken = default)
+    {
+        var obj = new JsonObject
+        {
+            ["code"] = actionCode,
+            ["more"] = MoreExtensions.ToJsonObject(jobMore)
+        };
+
+        return Task.FromResult(obj.ToJsonString());
+    }
+
+    /// <summary>
     /// Enqueues a job into the processing queue.
     /// </summary>
-    public virtual async Task EnqueueJobAsync(string job, Priority priority = Priority.Normal, CancellationToken stoppingToken = default)
-        => await _queue.EnqueueAsync(job, priority, stoppingToken).ConfigureAwait(false);
+    public Task EnqueueJobAsync(string job, Priority priority = Priority.Normal, CancellationToken stoppingToken = default)
+        => _queue.EnqueueAsync(job, priority, stoppingToken);
+
+    /// <summary>
+    /// Expands a job payload into action code and merged metadata.
+    /// </summary>
+    public Task<(string Code, JsonObject More)> ExpandAsync(string job, CancellationToken stoppingToken = default)
+    {
+        // Parse raw job JSON
+        var node = JsonNode.Parse(job)!.AsObject();
+
+        // Extract logical action code and job-specific metadata
+        var code = node.GetString("code")!;
+        var more = node.GetObject("more") ?? [];
+
+        // Resolve action definition from the factory
+        var item = _factory.GetActionItem(code);
+
+        // Clone action-level defaults to avoid mutating shared state
+        var mergedMore = (item.More?.DeepClone() as JsonObject) ?? [];
+
+        // Overlay job-level metadata on top of action defaults
+        // (job values win)
+        MoreExtensions.MergeInto(mergedMore, more);
+
+        return Task.FromResult((Code: code, More: mergedMore));
+    }
 
     /// <summary>
     /// Processes a single job by executing the resolved action.
@@ -79,48 +120,9 @@ public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger
     }
 
     /// <summary>
-    /// Compacts an action code and metadata into a job payload.
-    /// </summary>
-    public Task<string> CompactAsync(string actionCode, object? jobMore = null, CancellationToken stoppingToken = default)
-    {
-        var obj = new JsonObject
-        {
-            ["code"] = actionCode,
-            ["more"] = MoreExtensions.ToJsonObject(jobMore)
-        };
-
-        return Task.FromResult(obj.ToJsonString());
-    }
-
-    /// <summary>
-    /// Expands a job payload into action code and merged metadata.
-    /// </summary>
-    public Task<(string Code, JsonObject More)> ExpandAsync(string job, CancellationToken stoppingToken = default)
-    {
-        // Parse raw job JSON
-        var node = JsonNode.Parse(job)!.AsObject();
-
-        // Extract logical action code and job-specific metadata
-        var code = node.GetString("code")!;
-        var more = node.GetObject("more") ?? [];
-
-        // Resolve action definition from the factory
-        var item = _factory.GetActionItem(code);
-
-        // Clone action-level defaults to avoid mutating shared state
-        var mergedMore = (item.More?.DeepClone() as JsonObject) ?? [];
-
-        // Overlay job-level metadata on top of action defaults
-        // (job values win)
-        MoreExtensions.MergeInto(mergedMore, more);
-
-        return Task.FromResult((Code: code, More: mergedMore));
-    }
-
-    /// <summary>
     /// Executes the processor loop.
     /// </summary>
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken = default)
     {
         _logger.LogInformation("JobProcessor started");
 
