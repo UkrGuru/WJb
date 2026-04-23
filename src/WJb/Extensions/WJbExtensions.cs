@@ -9,6 +9,9 @@ namespace WJb.Extensions;
 /// </summary>
 public static class WJbExtensions
 {
+    /// <summary>
+    /// Registers WJb services and optional runtime components.
+    /// </summary>
     public static IServiceCollection AddWJb(this IServiceCollection services, IDictionary<string, ActionItem>? actions = null,
         bool addActionFactory = true, bool addProcessor = true, bool addScheduler = false, bool addHostedServices = true)
     {
@@ -21,6 +24,9 @@ public static class WJbExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers WJb actions and optionally the action factory.
+    /// </summary>
     public static IServiceCollection AddWJbActions(this IServiceCollection services, IDictionary<string, ActionItem>? actions = null,
         bool addActionFactory = true)
     {
@@ -58,6 +64,9 @@ public static class WJbExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers WJb runtime components such as queue, processor, scheduler, and hosted services.
+    /// </summary>
     public static IServiceCollection AddWJbRuntime(this IServiceCollection services,
         bool addProcessor = true, bool addScheduler = false, bool addHostedServices = true)
     {

@@ -10,5 +10,6 @@ public interface IAction
     /// <summary>
     /// Executes the action with provided metadata.
     /// </summary>
-    Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken);
+    Task ExecAsync(JsonObject? jobMore, 
+        CancellationToken cancellationToken);
 }

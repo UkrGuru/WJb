@@ -6,7 +6,7 @@ Minimal cron-based scheduler using WJb.
 CronWJb loads actions from *actions.json*, registers them with WJb, and executes them according to cron expressions.
 
 ## Features
-- Cron-based execution using WJb built-in scheduler.
+- Cron-based scheduled job execution (advanced cron available in Commercial edition)
 - Simple action model (`IAction`).
 - JSON-based configuration.
 - UTF-8 console output.

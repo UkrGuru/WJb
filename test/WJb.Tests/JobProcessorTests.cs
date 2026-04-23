@@ -13,14 +13,15 @@ public sealed class JobProcessorTests
     public async Task Compact_And_Expand_Roundtrip()
     {
         var factory = new TestActionFactory();
-        factory.Register("A", typeof(TestAction));
+        factory.Register("A", typeof(PTestAction));
 
         var processor = CreateProcessor(factory);
 
         var job = await processor.CompactAsync("A", new { X = 1 });
-        var (type, more) = await processor.ExpandAsync(job);
 
-        Assert.Equal(typeof(TestAction).AssemblyQualifiedName, type);
+        var (code, more) = await processor.ExpandAsync(job);
+
+        Assert.Equal("A", code);
         Assert.Equal(1, more["X"]!.GetValue<int>());
     }
 
@@ -45,7 +46,7 @@ public sealed class JobProcessorTests
        ======================= */
 
     [Fact]
-    public async Task ProcessJob_Executes_Action_And_Enqueues_Next_On_Success()
+    public async Task ProcessJob_Executes_Action_On_Success()
     {
         var action = new CapturingAction();
         var factory = new TestActionFactory();
@@ -54,26 +55,16 @@ public sealed class JobProcessorTests
         var queue = new CapturingQueue();
         var processor = CreateProcessor(factory, queue);
 
-        var job = await processor.CompactAsync("A", new { next = "A" });
+        var job = await processor.CompactAsync("A", new { X = 1 });
 
-        await processor.ProcessJobAsync(job, Priority.Normal);
+        await processor.ProcessJobAsync(job);
 
         Assert.True(action.ExecCalled);
-
-        Assert.Single(queue.Enqueued);
-
-        var (nextJob, prio) = queue.Enqueued[0];
-        Assert.Equal(Priority.Normal, prio);
-
-        var node = JsonNode.Parse(nextJob)!.AsObject();
-        Assert.Equal("A", node["code"]!.GetValue<string>());
-
-        var more = node["more"]!.AsObject();
-        Assert.True(more["__success"]!.GetValue<bool>());
+        Assert.Empty(queue.Enqueued);
     }
 
     [Fact]
-    public async Task ProcessJob_Sets_Success_False_And_Enqueues_Fail_Path()
+    public async Task ProcessJob_Action_Exception_Is_Caught_And_Does_Not_Enqueue()
     {
         var action = new ThrowingAction();
         var factory = new TestActionFactory();
@@ -82,23 +73,15 @@ public sealed class JobProcessorTests
         var queue = new CapturingQueue();
         var processor = CreateProcessor(factory, queue);
 
-        var job = await processor.CompactAsync("A", new { fail = "A" });
+        var job = await processor.CompactAsync("A");
 
-        await processor.ProcessJobAsync(job, Priority.Low);
+        await processor.ProcessJobAsync(job);
 
-        Assert.Single(queue.Enqueued);
-
-        var (nextJob, prio) = queue.Enqueued[0];
-        Assert.Equal(Priority.Low, prio);
-
-        var node = JsonNode.Parse(nextJob)!.AsObject();
-        var more = node["more"]!.AsObject();
-
-        Assert.False(more["__success"]!.GetValue<bool>());
+        Assert.Empty(queue.Enqueued);
     }
 
     [Fact]
-    public async Task ProcessJob_Cancellation_Skips_Action_And_Enqueue()
+    public async Task ProcessJob_Cancellation_Skips_Action()
     {
         var action = new CapturingAction();
         var factory = new TestActionFactory();
@@ -112,7 +95,7 @@ public sealed class JobProcessorTests
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await processor.ProcessJobAsync(job, Priority.Normal, cts.Token);
+        await processor.ProcessJobAsync(job, cts.Token);
 
         Assert.False(action.ExecCalled);
         Assert.Empty(queue.Enqueued);
@@ -141,13 +124,17 @@ internal sealed class CapturingQueue : IJobQueue
 {
     public readonly List<(string Job, Priority Priority)> Enqueued = [];
 
-    public Task EnqueueAsync(string job, Priority priority, CancellationToken cancellationToken = default)
+    public Task EnqueueAsync(
+        string job,
+        Priority priority,
+        CancellationToken cancellationToken = default)
     {
         Enqueued.Add((job, priority));
         return Task.CompletedTask;
     }
 
-    public Task<(string Job, Priority Priority)> DequeueNextAsync(CancellationToken cancellationToken = default)
+    public Task<(string Job, Priority Priority)> DequeueNextAsync(
+        CancellationToken cancellationToken = default)
         => throw new NotImplementedException();
 
     public void ReleaseSlot(Priority priority) { }
@@ -155,31 +142,35 @@ internal sealed class CapturingQueue : IJobQueue
 
 internal sealed class TestActionFactory : IActionFactory
 {
-    private readonly Dictionary<string, ActionItem> _items = new();
-    private readonly Dictionary<Type, IAction> _instances = new();
+    private readonly Dictionary<string, ActionItem> _items =
+        new(StringComparer.OrdinalIgnoreCase);
 
-    public event Action? Reloaded;
+    private readonly Dictionary<Type, IAction> _instances = new();
 
     public void Register(string code, Type actionType, IAction? instance = null)
     {
-        _items[code] = new ActionItem(actionType.AssemblyQualifiedName!, null);
+        _items[code] =
+            new ActionItem(actionType.AssemblyQualifiedName!, null);
 
         if (instance != null)
             _instances[actionType] = instance;
     }
 
-    public IAction Create(string actionType)
+    public IAction Create(string actionCode)
     {
-        var type = Type.GetType(actionType)!;
+        var typeName = _items[actionCode].Type!;
+        var type = Type.GetType(typeName)!;
+
         return _instances.TryGetValue(type, out var instance)
             ? instance
             : (IAction)Activator.CreateInstance(type)!;
     }
 
-    public ActionItem GetActionItem(string actionCode) => _items[actionCode];
+    public ActionItem GetActionItem(string actionCode)
+        => _items[actionCode];
 
-    public IReadOnlyDictionary<string, ActionItem> Snapshot() => throw new NotImplementedException();
-    public void Reload(IDictionary<string, ActionItem> newConfig) => throw new NotImplementedException();
+    public IReadOnlyDictionary<string, ActionItem> Snapshot()
+        => _items;
 }
 
 internal sealed class CapturingAction : IAction
@@ -198,4 +189,10 @@ internal sealed class ThrowingAction : IAction
 {
     public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
         => throw new InvalidOperationException("Boom");
+}
+
+internal sealed class PTestAction : IAction
+{
+    public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
+        => Task.CompletedTask;
 }
