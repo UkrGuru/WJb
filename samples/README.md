@@ -18,7 +18,8 @@ The goal of these samples is to help you:
     ├─ Basics/
     │  ├─ HelloWJb
     │  ├─ PriorityWJb
-    │  └─ WorkflowWJb
+    │  ├─ WorkflowWJb
+    │  └─ CronWJb
     ├─ Advanced/
     │  └─ README.md
     ├─ WJb.Samples.slnx

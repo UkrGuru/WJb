@@ -11,7 +11,7 @@
         <AssemblyName>WJb</AssemblyName>
         <RootNamespace>WJb</RootNamespace>
         <PackageId>WJb</PackageId>
-        <Version>0.27.0</Version>
+        <Version>0.28.0</Version>
 
         <!-- Deterministic build -->
         <Deterministic>true</Deterministic>
@@ -25,12 +25,7 @@
         <PackageProjectUrl>https://github.com/UkrGuru/WJb</PackageProjectUrl>
 
         <!-- NuGet package content -->
-        <Description>
-            WJb is a lightweight and flexible background job execution library for .NET,
-            built for simplicity and scalability. It provides priority-based queues,
-            JSON payload handling, scheduled jobs using standard cron syntax,
-            and seamless integration with dependency injection and hosted services.
-        </Description>
+        <Description>WJb is a lightweight and flexible background job execution library for .NET, built for simplicity and predictable scalability. It provides priority-based queues, JSON payload handling, cron-based scheduling metadata, and seamless integration with dependency injection and hosted services.        </Description>
         <PackageTags>webjobs; background-jobs; job-queue; workflow; scheduler; cron; dotnet; hosting; dependency-injection; async; queue; worker</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -55,11 +50,11 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <DebugType>portable</DebugType>
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DebugType>portable</DebugType>
+        <DebugType>none</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
