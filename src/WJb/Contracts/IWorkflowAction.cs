@@ -11,7 +11,7 @@ public interface IWorkflowAction
     /// <summary>
     /// Routes workflow execution to the next action using provided metadata.
     /// </summary>
-    Task NextAsync(JsonObject nextMore, CancellationToken stoppingToken = default);
+    Task NextAsync(JsonObject? nextMore, CancellationToken stoppingToken = default);
 
     // Workflow routing is explicit and opt-in.
     // Only actions that implement IWorkflowAction

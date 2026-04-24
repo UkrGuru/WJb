@@ -1,9 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using System.Text.Json.Nodes;
 using WJb;
 using WJb.Extensions;
+
+Console.OutputEncoding = Encoding.UTF8; 
 
 var actions = new Dictionary<string, ActionItem>(StringComparer.OrdinalIgnoreCase)
 {
@@ -25,7 +28,7 @@ using var host = Host.CreateDefaultBuilder(args)
     {
         logging.ClearProviders();
         logging.AddSimpleConsole(o => o.SingleLine = true);
-        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.None);
+        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
     })
     .ConfigureServices(services =>
     {
@@ -42,8 +45,8 @@ var job = await jobs.CompactAsync(
 await jobs.EnqueueJobAsync(job);
 
 await host.RunAsync();
-// ------------------
 
+// ------------------
 
 public sealed class FibonacciStartAction(
     IJobProcessor jobs,

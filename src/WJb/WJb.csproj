@@ -25,7 +25,7 @@
         <PackageProjectUrl>https://github.com/UkrGuru/WJb</PackageProjectUrl>
 
         <!-- NuGet package content -->
-        <Description>WJb is a lightweight and flexible background job execution library for .NET, built for simplicity and predictable scalability. It provides priority-based queues, JSON payload handling, cron-based scheduling metadata, and seamless integration with dependency injection and hosted services.        </Description>
+        <Description>WJb is a lightweight and flexible background job execution library for .NET, built for simplicity and predictable scalability. It provides priority-based queues, JSON payload handling, cron-based scheduling metadata, and seamless integration with dependency injection and hosted services.</Description>
         <PackageTags>webjobs; background-jobs; job-queue; workflow; scheduler; cron; dotnet; hosting; dependency-injection; async; queue; worker</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>

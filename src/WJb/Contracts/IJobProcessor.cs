@@ -22,7 +22,7 @@ public interface IJobProcessor
     /// <summary>
     /// Expands a job payload into action code and metadata.
     /// </summary>
-    Task<(string Code, JsonObject More)> ExpandAsync(string job,
+    Task<(string Code, JsonObject? More)> ExpandAsync(string job,
         CancellationToken stoppingToken = default);
 
     /// <summary>
