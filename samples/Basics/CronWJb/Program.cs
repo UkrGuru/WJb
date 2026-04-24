@@ -42,7 +42,7 @@ var host = Host.CreateDefaultBuilder(args)
             opt.TimestampFormat = "HH:mm:ss ";
         });
 
-        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.None);
+        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
     })
     .ConfigureServices((ctx, services) =>
     {

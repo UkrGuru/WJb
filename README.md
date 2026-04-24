@@ -89,13 +89,19 @@ Suitable for:
 
 A **Commercial License** is required if you intend to:
 
-*   Use WJb in a closed-source commercial product
-*   Offer WJb as part of a SaaS or hosted solution
-*   Redistribute it as part of a paid product or service
-*   Require enterprise usage, support, or SLA
+- Use WJb in a closed-source commercial product
+- Offer WJb as part of a SaaS or hosted solution
+- Redistribute it as part of a paid product or service
+- Require commercial usage, support, or SLA terms
+
+The commercial edition is provided as **WJb.Pro**.
+
+👉 **WJb.Pro — Solo Developer License**  
+https://ukrguru.gumroad.com/l/wjb-solo-lic
 
 For commercial licensing inquiries:  
-📧 **<ukrguru@gmail.com>**
+📧 **ukrguru@gmail.com**
+
 
 ```
 
