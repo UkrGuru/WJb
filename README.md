@@ -1,108 +1,102 @@
-# WJb
+# WJb — Background Job Architecture for .NET
+[![NuGet](https://img.shields.io/nuget/v/WJb)](https://www.nuget.org/packages/WJb/)
 
-**WJb** is a lightweight, extensible background job processor for .NET, designed around
-explicit job payloads, immutable snapshots, and deterministic scheduling.
+## Overview
 
-The project focuses on **predictable behavior**, **low abstraction overhead**, and
-**long-term API stability**.
+**WJb** is a lightweight, deterministic background job system for .NET,
+designed for applications where background execution is part of the *core domain*
+rather than a side concern.
+
+WJb favors **explicit execution**, **predictable behavior**, and **long‑term
+API stability** over convenience features like hidden retries, automatic pipelines,
+or implicit orchestration.
+
+It is well‑suited for backend systems where correctness, debuggability, and
+operational clarity matter more than configurability.
+
+---
+
+## Key Characteristics
+
+- Explicit job payloads (no ambient state)
+- Queue‑first execution model
+- Deterministic, single‑step execution
+- Immutable metadata snapshots
+- No hidden retries or background pipelines
+- No implicit orchestration logic
+- Stable, contract‑based public API
+
+---
+
+## Design Philosophy
+
+WJb is built around a few core ideas:
+
+- **Actions control their own execution lifecycle**
+- **Routing is explicit and owned by the action**
+- **Infrastructure executes — domain logic orchestrates**
+- **Metadata is configuration, not state**
+- **Nothing happens implicitly**
+
+If a job runs, it is because someone explicitly enqueued it.
+If a workflow continues, it is because an action explicitly decided so.
+
+---
+
+## What WJb Is *Not*
+
+WJb intentionally does **not** provide:
+
+- Automatic retries
+- Background pipelines
+- Hidden chaining
+- Distributed locks
+- Persistent orchestration engines
+
+If your system needs those features, WJb is probably not the right tool —
+and that is a deliberate design choice.
+
+---
+
+## Documentation
+
+- **Architecture & execution model**  
+  → [README.architecture.md](README.architecture.md)
+
+- **Design decisions & trade‑offs**  
+  → [README.design.md](README.design.md)
+
+- **Commercial usage & collaboration**  
+  → [README.commercial.md](README.commercial.md)
+
+- **About the author**  
+  → [README.author.md](README.author.md)
 
 ---
 
 ## Status
 
-- **Target framework:** .NET 8+
-- **API contract:** v0.28 (**frozen**)
-- **Branch:** `dev`
-- **Current version:** v0.28
-
-API documentation:
-👉 docs/api-v0.28.md
+- Target framework: **.NET 8+**
+- API contract version: **v0.29 (frozen)**
+- Free edition: stable
+- Commercial edition: available separately (WJb.Pro)
 
 ---
-
-## Key Concepts
-
-- **Job payload** — a compact JSON string representing an action and its metadata.
-- **Queue-first architecture** — jobs are always enqueued explicitly.
-- **Immutable snapshots** — readers always see a consistent system state.
-- **Cron scheduling** — optional cron metadata attached to actions.
-- **Explicit execution flow** — no implicit retries or hidden pipelines.
-
----
-
-## Design Principles
-
-- No magic background threads
-- No reflection-driven dispatch
-- No hidden dependency injection tricks
-- Immutable data instead of locks
-- Explicit > implicit
-
----
-
-## Example
-
-```csharp
-var payload = await jobSerializer.CompactAsync(
-    actionCode: "email.send",
-    jobMore: new
-    {
-        to = "user@example.com",
-        subject = "Hello"
-    },
-    stoppingToken);
-
-await jobQueue.EnqueueJobAsync(payload, Priority.Normal, stoppingToken);
-````
-
-***
-
-## Versioning
-
-WJb uses **contract-based versioning**.
-
-*   Patch releases may include bug fixes.
-*   Minor versions may extend functionality **without breaking** the API contract.
-*   Major versions may redefine contracts.
-
-The **v0.28 API is frozen** and will remain backward-compatible.
-
-***
 
 ## Licensing
 
-WJb is available under **dual licensing**.
+WJb is dual‑licensed:
 
-### Open Source License (Free Edition)
+- **Apache License 2.0**  
+  For open‑source and non‑commercial usage
 
-**Apache License 2.0**
+- **Commercial License (WJb.Pro)**  
+  Required for closed‑source, SaaS, and commercial distribution
 
-Suitable for:
-
-*   Open-source projects
-*   Internal or non-commercial usage
-*   Evaluation and prototyping
-
-***
-
-### Commercial License (WJb.Pro)
-
-A **Commercial License** is required if you intend to:
-
-- Use WJb in a closed-source commercial product
-- Offer WJb as part of a SaaS or hosted solution
-- Redistribute it as part of a paid product or service
-- Require commercial usage, support, or SLA terms
-
-The commercial edition is provided as **WJb.Pro**.
-
-👉 **WJb.Pro — Solo Developer License**  
-https://ukrguru.gumroad.com/l/wjb-solo-lic
-
-For commercial licensing inquiries:  
-📧 **ukrguru@gmail.com**
-
-
-```
+For commercial licensing inquiries, see [README.commercial.md](README.commercial.md).
 
 ---
+
+## Philosophy in One Sentence
+
+> **WJb trades convenience for clarity — so that background code behaves like any other code you trust.**

@@ -1,4 +1,6 @@
-﻿namespace WJb;
+﻿using System.Collections.ObjectModel;
+
+namespace WJb;
 
 /// <summary>
 /// Default implementation of <see cref="IActionFactory"/>.
@@ -11,11 +13,14 @@ public sealed class ActionFactory : IActionFactory
     /// <summary>
     /// Creates a new <see cref="ActionFactory"/> instance.
     /// </summary>
-    public ActionFactory(IServiceProvider services, IDictionary<string, ActionItem>? actions = default)
+    public ActionFactory(
+        IServiceProvider services,
+        IDictionary<string, ActionItem>? actions = default)
     {
         _services = services;
-        _actions = new Dictionary<string, ActionItem>(actions 
-            ?? new Dictionary<string, ActionItem>(), StringComparer.OrdinalIgnoreCase);
+        _actions = new Dictionary<string, ActionItem>(
+            actions ?? new Dictionary<string, ActionItem>(),
+            StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -31,6 +36,10 @@ public sealed class ActionFactory : IActionFactory
             ?? throw new InvalidOperationException(
                 $"Action type '{item.Type}' was not found.");
 
+        if (!typeof(IAction).IsAssignableFrom(type))
+            throw new InvalidOperationException(
+                $"Type '{type.FullName}' does not implement IAction.");
+
         var action =
             _services.GetService(type) as IAction
             ?? Activator.CreateInstance(type) as IAction
@@ -45,10 +54,10 @@ public sealed class ActionFactory : IActionFactory
     /// </summary>
     public ActionItem GetActionItem(string actionCode)
         => _actions[actionCode];
-    
+
     /// <summary>
     /// Returns a snapshot of the current action configuration.
     /// </summary>
     public IReadOnlyDictionary<string, ActionItem> Snapshot()
-        => _actions;
+        => new ReadOnlyDictionary<string, ActionItem>(_actions);
 }

@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="src/WJb/WJb.csproj" />
-  <Project Path="test/WJb.Tests/WJb.Tests.csproj" />
-</Solution>

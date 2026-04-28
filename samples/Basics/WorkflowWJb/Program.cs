@@ -4,24 +4,32 @@ using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json.Nodes;
 using WJb;
+using WJb.Actions;
 using WJb.Extensions;
 
-Console.OutputEncoding = Encoding.UTF8; 
+Console.OutputEncoding = Encoding.UTF8;
+
+// ---------------------------------------------------------------------
+// Action registry
+// ---------------------------------------------------------------------
 
 var actions = new Dictionary<string, ActionItem>(StringComparer.OrdinalIgnoreCase)
 {
-    ["fib-start"] = new ActionItem(
-        type: typeof(FibonacciStartAction).AssemblyQualifiedName!,
-        more: new JsonObject
+    ["fib-start"] = ActionItemFactory.Create(
+        typeof(FibonacciStartAction).AssemblyQualifiedName!,
+        new JsonObject
         {
             ["next"] = "fib-build"
         }),
 
-    ["fib-build"] = new ActionItem(
-        type: typeof(FibonacciBuildAction).AssemblyQualifiedName!,
+    ["fib-build"] = ActionItemFactory.Create(
+        typeof(FibonacciBuildAction).AssemblyQualifiedName!,
         more: null)
 };
 
+// ---------------------------------------------------------------------
+// Host setup
+// ---------------------------------------------------------------------
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
@@ -36,22 +44,34 @@ using var host = Host.CreateDefaultBuilder(args)
     })
     .Build();
 
+// ---------------------------------------------------------------------
+// Kick off initial job
+// ---------------------------------------------------------------------
+
 var jobs = host.Services.GetRequiredService<IJobProcessor>();
 
 var job = await jobs.CompactAsync(
     "fib-start",
-    new { from = 10, to = 100 });
+    new
+    {
+        from = 10,
+        to = 100
+    });
 
 await jobs.EnqueueJobAsync(job);
 
+// ---------------------------------------------------------------------
+
 await host.RunAsync();
 
-// ------------------
+// =====================================================================
+// Actions
+// =====================================================================
 
 public sealed class FibonacciStartAction(
     IJobProcessor jobs,
     ILogger<FibonacciStartAction> logger)
-    : WorkflowAction
+    : WorkflowActionBase
 {
     private readonly IJobProcessor _jobs = jobs;
     private readonly ILogger<FibonacciStartAction> _logger = logger;
@@ -62,11 +82,8 @@ public sealed class FibonacciStartAction(
     {
         ArgumentNullException.ThrowIfNull(more);
 
-        var from = more.GetInt64("from")
-            ?? throw new ArgumentNullException("from");
-
-        var to = more.GetInt64("to")
-            ?? throw new ArgumentNullException("to");
+        var from = GetRequiredInt64(more, "from");
+        var to = GetRequiredInt64(more, "to");
 
         long a = 0;
         long b = 1;
@@ -104,16 +121,27 @@ public sealed class FibonacciStartAction(
             next,
             new
             {
-                from = more.GetInt64("from"),
-                to = more.GetInt64("to"),
-                a = more.GetInt64("a"),
-                b = more.GetInt64("b")
+                from = more.GetString("from"),
+                to = more.GetString("to"),
+                a = more.GetString("a"),
+                b = more.GetString("b")
             },
             stoppingToken);
 
         await _jobs.EnqueueJobAsync(job, Priority.Normal, stoppingToken);
     }
+
+    private static long GetRequiredInt64(JsonObject more, string name)
+    {
+        var s = more.GetString(name);
+        if (!long.TryParse(s, out var value))
+            throw new ArgumentException($"'{name}' must be a valid Int64.");
+
+        return value;
+    }
 }
+
+// ---------------------------------------------------------------------
 
 public sealed class FibonacciBuildAction(
     ILogger<FibonacciBuildAction> logger)
@@ -127,24 +155,16 @@ public sealed class FibonacciBuildAction(
     {
         ArgumentNullException.ThrowIfNull(more);
 
-        var from = more.GetInt64("from")
-            ?? throw new ArgumentNullException("from");
-
-        var to = more.GetInt64("to")
-            ?? throw new ArgumentNullException("to");
-
-        var a = more.GetInt64("a")
-            ?? throw new ArgumentNullException("a");
-
-        var b = more.GetInt64("b")
-            ?? throw new ArgumentNullException("b");
+        var from = GetRequiredInt64(more, "from");
+        var to = GetRequiredInt64(more, "to");
+        var a = GetRequiredInt64(more, "a");
+        var b = GetRequiredInt64(more, "b");
 
         var values = new JsonArray();
 
         while (a <= to)
         {
             values.Add(a);
-
             var next = a + b;
             a = b;
             b = next;
@@ -157,5 +177,14 @@ public sealed class FibonacciBuildAction(
             values.ToJsonString());
 
         return Task.CompletedTask;
+    }
+
+    private static long GetRequiredInt64(JsonObject more, string name)
+    {
+        var s = more.GetString(name);
+        if (!long.TryParse(s, out var value))
+            throw new ArgumentException($"'{name}' must be a valid Int64.");
+
+        return value;
     }
 }

@@ -8,31 +8,36 @@ using WJb.Extensions;
 
 Console.OutputEncoding = Encoding.UTF8;
 
+// ---------------------------------------------------------------------
+// Action registration with cron metadata
+// ---------------------------------------------------------------------
+
 var actions = new Dictionary<string, ActionItem>
 {
-    ["HelloEveryMinute"] = new ActionItem
-    {
-        Type = "DummyAction, CronWJb",
-        More = new JsonObject
+    ["HelloEveryMinute"] = ActionItemFactory.Create(
+        typeof(DummyAction).AssemblyQualifiedName!,
+        new JsonObject
         {
             ["cron"] = "* * * * *",
             ["priority"] = "ASAP",
             ["message"] = "Minute tick ✅"
-        }
-    },
-    ["Hello9to5Weekdays"] = new ActionItem
-    {
-        Type = "DummyAction, CronWJb",
-        More = new JsonObject
+        }),
+
+    ["HelloWorkingHours"] = ActionItemFactory.Create(
+        typeof(DummyAction).AssemblyQualifiedName!,
+        new JsonObject
         {
             ["cron"] = "* 9-21 * * 1-5",
             ["priority"] = "High",
-            ["message"] = "Working hours ping (every minute, Mon–Fri)"
-        }
-    }
+            ["message"] = "Working hours ping (Mon–Fri)"
+        })
 };
 
-var host = Host.CreateDefaultBuilder(args)
+// ---------------------------------------------------------------------
+// Host setup
+// ---------------------------------------------------------------------
+
+using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
     {
         logging.ClearProviders();
@@ -44,7 +49,7 @@ var host = Host.CreateDefaultBuilder(args)
 
         logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
     })
-    .ConfigureServices((ctx, services) =>
+    .ConfigureServices(services =>
     {
         services.AddWJb(actions, addScheduler: true);
     })
@@ -62,18 +67,18 @@ foreach (var kv in actions)
 
 await host.RunAsync();
 
+// =====================================================================
+// Action implementation
+// =====================================================================
 
-// ✅ Action using ILogger
 public sealed class DummyAction(ILogger<DummyAction> logger) : IAction
 {
     private readonly ILogger<DummyAction> _logger = logger;
 
     public Task ExecAsync(JsonObject? jobMore, CancellationToken stoppingToken)
     {
-        var message = jobMore?.GetString("message") ?? "Hello from DummyAction!";
-
+        var message = jobMore.GetString("message") ?? "Hello from DummyAction!";
         _logger.LogInformation("{Message}", message);
-
         return Task.CompletedTask;
     }
 }

@@ -36,7 +36,7 @@ public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQue
     /// <summary>
     /// Dequeues the next available job respecting priority order.
     /// </summary>
-    public async Task<(string Job, Priority Priority)> DequeueNextAsync(
+    public async Task<string> DequeueNextAsync(
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -44,16 +44,16 @@ public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQue
         while (true)
         {
             if (_asap.Reader.TryRead(out var asap))
-                return (asap, Priority.ASAP);
+                return asap;
 
             if (_high.Reader.TryRead(out var high))
-                return (high, Priority.High);
+                return high;
 
             if (_normal.Reader.TryRead(out var normal))
-                return (normal, Priority.Normal);
+                return normal;
 
             if (_low.Reader.TryRead(out var low))
-                return (low, Priority.Low);
+                return low;
 
             var completed = await Task.WhenAny(
                 _asap.Reader.WaitToReadAsync(cancellationToken).AsTask(),
