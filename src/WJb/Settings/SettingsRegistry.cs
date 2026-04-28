@@ -1,14 +1,19 @@
 ﻿namespace WJb;
 
 /// <summary>
-/// Default settings registry that always returns the provided default value.
+/// Registry for retrieving settings values.
+/// Represents an empty/default implementation of <see cref="ISettingsRegistry"/>.
 /// </summary>
 public sealed class SettingsRegistry : ISettingsRegistry
 {
+    /// <summary>
+    /// An empty settings registry that always returns default values.
+    /// </summary>
     public static readonly ISettingsRegistry Empty = new SettingsRegistry();
 
     private SettingsRegistry() { }
 
+    /// <inheritdoc/>
     public T Get<T>(string key, T defaultValue = default!)
         => defaultValue;
 }

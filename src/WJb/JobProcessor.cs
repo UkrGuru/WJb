@@ -8,10 +8,8 @@ namespace WJb;
 /// <summary>
 /// Background job processor that executes queued jobs.
 /// </summary>
-public class JobProcessor(IJobQueue queue,
-                          IActionFactory actionFactory,
-                          ILogger<JobProcessor> logger,
-                          ISettingsRegistry? settings = default) : BackgroundService, IJobProcessor
+public class JobProcessor(IJobQueue queue, IActionFactory actionFactory, ILogger<JobProcessor> logger, 
+    ISettingsRegistry? settings = null) : BackgroundService, IJobProcessor
 {
     private readonly IJobQueue _queue = queue ?? throw new ArgumentNullException(nameof(queue));
     private readonly IActionFactory _factory = actionFactory ?? throw new ArgumentNullException(nameof(actionFactory));
@@ -96,10 +94,10 @@ public class JobProcessor(IJobQueue queue,
         {
             // - action code
             // - merged metadata (action defaults + job override)
-            var expanded = await ExpandAsync(job, stoppingToken).ConfigureAwait(false);
+            var (Code, More) = await ExpandAsync(job, stoppingToken).ConfigureAwait(false);
 
-            var actionCode = expanded.Code; 
-            var execMore = expanded.More?.DeepClone() as JsonObject ?? [];
+            var actionCode = Code; 
+            var execMore = More?.DeepClone() as JsonObject ?? [];
 
             // Execute the action
             var action = _factory.Create(actionCode);
@@ -130,7 +128,7 @@ public class JobProcessor(IJobQueue queue,
         {
             // Block until the next job is available,
             // always respecting priority ordering
-            var (job, prio) = await _queue.DequeueNextAsync(stoppingToken).ConfigureAwait(false);
+            var job = await _queue.DequeueNextAsync(stoppingToken).ConfigureAwait(false);
 
             // Process job end-to-end, including possible chaining
             await ProcessJobAsync(job, stoppingToken).ConfigureAwait(false);

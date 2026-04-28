@@ -8,9 +8,9 @@ Console.WriteLine(".NET " + Environment.Version);
 Console.WriteLine();
 
 await JobProcessorBaselineBench.RunAsync();
-//await EnqueueBaselineBenchmarks.RunAsync();
-//await EnqueueBaselineMultithreadBenchmarks.RunAsync();
-//await QueueSemanticsBenchmarks.RunAllAsync();
+await EnqueueBaselineBenchmarks.RunAsync();
+await EnqueueBaselineMultithreadBenchmarks.RunAsync();
+await QueueSemanticsBenchmarks.RunAllAsync();
 
 // ProcessingBenchmarks are deferred intentionally.
 // await ProcessingBenchmarks.RunAllAsync();

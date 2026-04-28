@@ -46,13 +46,13 @@ public static class QueueSemanticsBenchmarks
         await queue.EnqueueAsync("B", Priority.Normal);
         await queue.EnqueueAsync("C", Priority.Normal);
 
-        var (j1, p1) = await queue.DequeueNextAsync(CancellationToken.None);
+        var j1 = await queue.DequeueNextAsync(CancellationToken.None);
         //queue.ReleaseSlot(p1);
 
-        var (j2, p2) = await queue.DequeueNextAsync(CancellationToken.None);
+        var j2 = await queue.DequeueNextAsync(CancellationToken.None);
         //queue.ReleaseSlot(p2);
 
-        var (j3, p3) = await queue.DequeueNextAsync(CancellationToken.None);
+        var j3 = await queue.DequeueNextAsync(CancellationToken.None);
         //queue.ReleaseSlot(p3);
 
         if (j1 != "A" || j2 != "B" || j3 != "C")
@@ -82,13 +82,13 @@ public static class QueueSemanticsBenchmarks
         await queue.EnqueueAsync("high-1", Priority.High);
         await queue.EnqueueAsync("low-2", Priority.Low);
 
-        var (job, prio) = await queue.DequeueNextAsync(CancellationToken.None);
+        var job = await queue.DequeueNextAsync(CancellationToken.None);
         //queue.ReleaseSlot(prio);
 
-        if (job != "high-1" || prio != Priority.High)
+        if (job != "high-1")
         {
             throw new Exception(
-                $"Priority violation: expected [high-1, High], got [{job}, {prio}]");
+                $"Priority violation: expected [high-1], got [{job}]");
         }
 
         Console.WriteLine("✔ Strict priority precedence");
