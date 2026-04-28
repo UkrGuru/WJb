@@ -100,3 +100,10 @@ For commercial licensing inquiries, see [README.commercial.md](README.commercial
 ## Philosophy in One Sentence
 
 > **WJb trades convenience for clarity — so that background code behaves like any other code you trust.**
+
+---
+
+## ❤️ Support
+
+If this project helps you, you can support its development:
+👉 https://ko-fi.com/ukrguru
