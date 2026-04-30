@@ -1,15 +1,25 @@
-# Commercial usage and collaboration
+## WJb.Pro
+
+**WJb.Pro** is the commercial edition of WJb.
+It is intended for production, commercial, SaaS, and closed‑source environments.
+
+Use of WJb.Pro is subject to the **WJb.Pro Commercial License**.
+
+***
+
+## Collaboration and Support
 
 I actively develop and maintain WJb
-and provide direct support for its use in production environments.
+and provide direct support for its use in commercial and production environments.
 
-If you are interested in:
+You can contact me regarding:
 
-- commercial or closed‑source usage
-- adapting this architecture to your existing infrastructure
-- custom extensions or integrations
-- consulting or long‑term technical support
+*   commercial licensing or renewal
+*   migration from the free core to WJb.Pro
+*   adapting the architecture to existing infrastructure
+*   custom extensions or integrations
+*   consulting or long‑term technical support
 
-feel free to get in touch.
+📧 **<ukrguru@gmail.com>**
 
-📧 ukrguru@gmail.com
+***

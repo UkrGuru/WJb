@@ -1,28 +1,16 @@
-# Licensing
-
+Licensing
 WJb is distributed under a dual‑license model.
 
-## Open source license
-
-WJb is available under the **Apache License 2.0**.
-
+Open‑source license
+The WJb free core is licensed under the Apache License 2.0.
 This license permits use, modification, and distribution
-for open‑source and non‑commercial projects,
-subject to standard Apache 2.0 terms.
+in accordance with standard Apache 2.0 terms.
 
-## Commercial license
-
-A commercial license is required for:
-
-- closed‑source commercial products
-- Software‑as‑a‑Service (SaaS) offerings
-- redistribution as part of proprietary systems
-- enterprise or paid client deployments
-
-Commercial licensing enables use of WJb
-without open‑source disclosure requirements
-and may include additional support or collaboration terms.
-
+Commercial license
+Use of WJb in commercial, SaaS, or closed‑source systems
+requires a commercial license.
+The commercial edition is provided as WJb.Pro
+and is licensed separately under the WJb.Pro Commercial License.
+Commercial use of WJb without a valid WJb.Pro license is not permitted.
 For commercial licensing inquiries, contact:
-
 📧 ukrguru@gmail.com
