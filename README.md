@@ -14,6 +14,40 @@ WJb prioritizes **explicit execution**, **predictable behavior**, and
 
 ***
 
+## Quick example (explicit workflow)
+
+A minimal workflow where each step is defined declaratively  
+and only the first job is enqueued manually.
+
+```csharp
+var actions = new Dictionary<string, ActionItem>
+{
+    ["first"] = new()
+    {
+        Type = "FirstAction, Sample",
+        More = new JsonObject { ["next"] = "second" }
+    },
+    ["second"] = new()
+    {
+        Type = "SecondAction, Sample"
+    }
+};
+
+services.AddWJb(actions);
+
+var jobs = host.Services.GetRequiredService<IJobProcessor>();
+var job = await jobs.CompactAsync("first");
+await jobs.EnqueueJobAsync(job);
+```
+
+Only the first job is enqueued explicitly.  
+All further workflow progression is driven by declared metadata.
+
+A full runnable example is available at:  
+→ `samples/Basics/WorkflowWJb`
+
+***
+
 ## Scope of the Base Edition
 
 This package represents the **Base (free) edition** of WJb.
@@ -133,14 +167,28 @@ These omissions are deliberate design decisions.
 
 ***
 
+## License Types
+
+The commercial capabilities of **WJb** are available under the  
+**WJb — Commercial Capability License**.
+
+* **Solo License** — for individual developers using WJb in commercial projects  
+  → https://ukrguru.gumroad.com/l/wjb-solo-lic
+
+The **Base edition** remains free for non-commercial use, evaluation,
+and open-source projects.
+
+For full commercial terms, redistribution rules, and license details, see:  
+→ `README.commercial.md`
+
+***
+
 ## Licensing
 
 The **Base edition** of WJb is available under the **Apache License 2.0**.
 
-Commercial, SaaS, and closed‑source usage requires a separate
-commercial license available as **WJb.Pro**.
-
-See README.commercial.md for details.
+Commercial, SaaS, and closed‑source usage requires the appropriate
+commercial license.
 
 ***
 
@@ -154,5 +202,3 @@ See README.commercial.md for details.
 
 If this project helps you, you can support its development:  
 👉 <https://ko-fi.com/ukrguru>
-
-***
