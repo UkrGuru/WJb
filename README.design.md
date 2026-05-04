@@ -1,86 +1,106 @@
-# Design decisions and trade‑offs
+# Design Decisions and Trade‑offs
 
-This document focuses on **local engineering decisions**
-made within the overall WJb architecture.
+This document describes **local engineering decisions**
+made within the WJb architecture.
 
-It explains *how* specific mechanisms are implemented,
-*what alternatives were considered*,
-and *which trade‑offs were explicitly accepted*.
+It explains **how specific mechanisms are implemented**,
+**which alternatives were considered**,
+and **what trade‑offs were explicitly accepted**.
 
-Architectural goals and system‑level structure
-are described in README.architecture.md.
+System‑level goals and structural overview
+are described in `README.architecture.md`.
 
----
+***
 
 ## Explicit execution flow
 
-Job execution in WJb is entirely explicit.
+Job execution in WJb is fully explicit.
 
-There are no implicit retries, background pipelines,
-or hidden orchestration layers.
-All execution transitions are visible
+There are:
+
+*   no implicit retries
+*   no background pipelines
+*   no hidden orchestration layers
+*   no automatic job transitions
+
+All execution steps are initiated through
+explicit enqueue operations
+and action‑owned routing logic.
+
+Execution behavior is therefore always visible
 either in code or in explicitly defined job metadata.
 
-This approach makes execution behavior easier to reason about
-during debugging, testing, and incident analysis.
+This improves reasoning during debugging,
+testing, and incident analysis.
 
----
+***
 
 ## Immutable snapshots
 
-State in WJb is modeled as immutable snapshots.
+Runtime configuration in WJb is modeled as immutable snapshots.
 
-Readers always observe a consistent system view,
-and execution logic never mutates shared or persisted state in place.
+Readers always observe a consistent view of action definitions,
+and execution logic never mutates shared configuration in place.
 
-Each execution step operates on its own snapshot,
-producing an explicit state transition.
-This design reduces concurrency‑related complexity
-and improves predictability under load.
+Snapshots are:
 
----
+*   built deterministically
+*   replaced atomically
+*   never partially visible
+
+Each execution step operates against a single snapshot,
+avoiding concurrency hazards and hidden state transitions.
+
+***
 
 ## Queue‑first model
 
-All work enters the system through explicit enqueue operations.
+All work enters the system through explicit queue operations.
 
-There is no execution initiated directly by method calls.
-This enforces a strict boundary between:
+Execution is never triggered directly by method calls.
+This enforces a strict separation between:
 
-- expressing intent
-- performing execution
+*   **expressing intent** (enqueue)
+*   **performing execution** (dequeue and process)
 
-By design, execution timing, ordering, and side effects
+As a result, execution timing, ordering, and side effects
 remain observable and externally controllable.
 
----
+***
 
 ## Avoidance of runtime magic
 
 WJb intentionally avoids:
 
-- reflection‑driven dispatch
-- implicit dependency injection behavior
-- implicitly started background threads
-- framework‑level execution conventions
+*   implicit orchestration
+*   hidden execution conventions
+*   background lifecycle automation
+*   framework‑driven behavior assumptions
 
-Instead, all runtime behavior is code‑driven,
-locally observable, and reproducible.
+Runtime behavior is driven by:
+
+*   explicit code
+*   declared metadata
+*   deterministic execution paths
 
 This reduces hidden coupling
-and lowers the cognitive load for maintainers.
+and keeps behavior locally understandable and reproducible.
 
----
+***
 
 ## Accepted trade‑offs
 
 These design decisions intentionally result in:
 
-- more explicit configuration compared to opinionated frameworks
-- less implicit automation
-- slightly higher upfront integration effort
+*   more explicit setup compared to opinionated frameworks
+*   fewer convenience abstractions
+*   higher upfront integration effort
 
-These trade‑offs are considered acceptable
-in exchange for long‑term stability,
-operational predictability,
-and ease of reasoning in production systems.
+These trade‑offs are accepted in exchange for:
+
+*   long‑term API stability
+*   predictable execution behavior
+*   reduced operational ambiguity
+*   ease of reasoning in production environments
+
+***
