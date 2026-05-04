@@ -43,9 +43,18 @@ required for long‑term operation in real‑world systems.
 
 ***
 
-
 ## License Types
-...
+
+The commercial capabilities of **WJb** are available under the  
+**WJb — Commercial Capability License**, offered in the following variants:
+
+*   **Solo License** — for individual developers  
+    <https://ukrguru.gumroad.com/l/wjb-solo-lic>
+
+*   **Team License** — for companies and teams  
+    <https://ukrguru.gumroad.com/l/wjb-team-lic>
+
+***
 
 ## WJb.Pro
 
