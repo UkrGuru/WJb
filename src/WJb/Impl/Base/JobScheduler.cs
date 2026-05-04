@@ -1,15 +1,19 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿// WJb – Base Edition
+// Copyright (c) 2025–2026 Oleksandr Viktor (UkrGuru).
+// Licensed under the WJb Base License.
+
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WJb.Extensions;
 using WJb.Helpers;
 
-namespace WJb;
+namespace WJb.Impl.Base;
 
 /// <summary>
 /// Background scheduler that enqueues jobs based on cron configuration.
 /// Free edition implementation (snapshot-based).
 /// </summary>
-public sealed class JobScheduler : BackgroundService, IJobScheduler
+internal sealed class JobScheduler : BackgroundService, IJobScheduler
 {
     private readonly IJobQueue _jobQueue;
     private readonly IJobProcessor _jobProcessor;

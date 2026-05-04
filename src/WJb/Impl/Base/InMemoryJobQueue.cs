@@ -1,12 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
+﻿// WJb – Base Edition
+// Copyright (c) 2025–2026 Oleksandr Viktor (UkrGuru).
+// Licensed under the WJb Base License.
+
+using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 
-namespace WJb;
+namespace WJb.Impl.Base;
 
 /// <summary>
 /// In-memory implementation of IJobQueue with priority support.
 /// </summary>
-public sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQueue
+internal sealed class InMemoryJobQueue(ILogger<InMemoryJobQueue> logger) : IJobQueue
 {
     private readonly ILogger<InMemoryJobQueue> _logger = logger;
     private readonly Channel<string> _asap = Channel.CreateUnbounded<string>();

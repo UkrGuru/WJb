@@ -11,7 +11,7 @@
         <AssemblyName>WJb</AssemblyName>
         <RootNamespace>WJb</RootNamespace>
         <PackageId>WJb</PackageId>
-        <Version>0.29.0</Version>
+        <Version>0.30.0-beta.2</Version>
 
         <!-- Deterministic build -->
         <Deterministic>true</Deterministic>
@@ -55,14 +55,6 @@
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
       <DebugType>none</DebugType>
     </PropertyGroup>
-    <ItemGroup>
-      <Compile Remove="Settings\**" />
-      <EmbeddedResource Remove="Settings\**" />
-      <None Remove="Settings\**" />
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Include="Settings\SettingsRegistry.cs" />
-    </ItemGroup>
 
     <ItemGroup>
         <!-- License -->

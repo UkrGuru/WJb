@@ -8,40 +8,37 @@ using WJb.Extensions;
 
 Console.OutputEncoding = Encoding.UTF8;
 
-// ---------------------------------------------------------------------
-// Action registration
-// ---------------------------------------------------------------------
+// --------------------------------------------------
+// Actions
+// --------------------------------------------------
 
 var actions = new Dictionary<string, ActionItem>
 {
     ["print"] = ActionItemFactory.Create(
-        typeof(PrintAction).AssemblyQualifiedName!,
-        new JsonObject
-        {
-            ["name"] = "Oleksandr"
-        })
+        type: typeof(PrintAction).AssemblyQualifiedName!, more: new { name = "Oleksandr" })
 };
 
-// ---------------------------------------------------------------------
-// Host setup
-// ---------------------------------------------------------------------
+// --------------------------------------------------
+// Host
+// --------------------------------------------------
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
     {
         logging.ClearProviders();
         logging.AddSimpleConsole(opt => opt.SingleLine = true);
-        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
+        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.None);
     })
     .ConfigureServices(services =>
     {
+
         services.AddWJb(actions);
     })
     .Build();
 
-// ---------------------------------------------------------------------
-// Enqueue jobs with different priorities
-// ---------------------------------------------------------------------
+// ----------------------------
+// Enqueue jobs with priorities
+// ----------------------------
 
 var jobs = host.Services.GetRequiredService<IJobProcessor>();
 
@@ -57,23 +54,15 @@ await jobs.EnqueueJobAsync(
     await jobs.CompactAsync("print", new { text = "Normal priority" }),
     Priority.Normal);
 
-// ---------------------------------------------------------------------
-
 await host.RunAsync();
-
-// =====================================================================
-// Action implementation
-// =====================================================================
 
 public sealed class PrintAction(ILogger<PrintAction> logger) : IAction
 {
     private readonly ILogger<PrintAction> _logger = logger;
 
-    public Task ExecAsync(
-        JsonObject? jobMore,
-        CancellationToken stoppingToken)
+    public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
     {
-        var text = jobMore.GetString("text") ?? "<empty>";
+        var text = jobMore?.GetString("text") ?? "<empty>";
         _logger.LogInformation(text);
         return Task.CompletedTask;
     }

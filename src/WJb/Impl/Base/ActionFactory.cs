@@ -1,27 +1,22 @@
-﻿using System.Collections.ObjectModel;
+﻿// WJb – Base Edition
+// Copyright (c) 2025–2026 Oleksandr Viktor (UkrGuru).
+// Licensed under the WJb Base License.
 
-namespace WJb;
+using System.Collections.ObjectModel;
+
+namespace WJb.Impl.Base;
 
 /// <summary>
-/// Default implementation of <see cref="IActionFactory"/>.
+/// Creates a new <see cref="ActionFactory"/> instance.
 /// </summary>
-public sealed class ActionFactory : IActionFactory
+internal sealed class ActionFactory(
+    IServiceProvider services,
+    IDictionary<string, ActionItem>? actions = default) : IActionFactory
 {
-    private readonly IServiceProvider _services;
-    private readonly Dictionary<string, ActionItem> _actions;
-
-    /// <summary>
-    /// Creates a new <see cref="ActionFactory"/> instance.
-    /// </summary>
-    public ActionFactory(
-        IServiceProvider services,
-        IDictionary<string, ActionItem>? actions = default)
-    {
-        _services = services;
-        _actions = new Dictionary<string, ActionItem>(
+    private readonly IServiceProvider _services = services;
+    private readonly Dictionary<string, ActionItem> _actions = new Dictionary<string, ActionItem>(
             actions ?? new Dictionary<string, ActionItem>(),
             StringComparer.OrdinalIgnoreCase);
-    }
 
     /// <summary>
     /// Creates an <see cref="IAction"/> by action code.
