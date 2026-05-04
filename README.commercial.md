@@ -1,86 +1,106 @@
-# Commercial Edition
+# WJb — Commercial Licensing
 
-The Commercial Edition of **WJb** extends the Base execution core with additional
-capabilities intended for **production**, **commercial**, **SaaS**, and
-**closed‑source** environments.
+## Overview
 
-It builds on the same explicit execution model and stable API contract,
-while providing runtime features, integrations, and guarantees
-required for long‑term operation in real‑world systems.
+This document defines the licensing terms and commercial usage rules
+for **WJb** and its commercial capabilities.
 
-## Base vs Commercial Comparison
+The **Base edition** of WJb is intentionally minimal and remains free for
+non‑commercial use, evaluation, and open‑source projects.
 
-| Area                          | **WJb Base**                      | **WJb Commercial (WJb.Pro)**                      |
-| ----------------------------- | --------------------------------- | ------------------------------------------------- |
-| Product name                  | WJb                               | WJb                                               |
-| Package                       | `WJb`                             | `WJb.Pro`                                         |
-| License                       | Apache License 2.0                | WJb — Commercial Capability License (Solo / Team) |
-| Intended use                  | Open‑source, learning, evaluation | Commercial, SaaS, production, closed‑source       |
-| Job execution                 | ✅ Explicit, deterministic         | ✅ Explicit, deterministic                         |
-| Job payloads                  | ✅ JSON, explicit                  | ✅ JSON, explicit                                  |
-| Execution model               | ✅ Queue‑first                     | ✅ Queue‑first                                     |
-| Action model                  | ✅ `IAction`, explicit routing     | ✅ Same, extended capabilities                     |
-| Workflow routing              | ✅ Explicit (`IWorkflowAction`)    | ✅ Same, plus extensions                           |
-| Scheduling (cron)             | ✅ Basic                           | ✅ Extended                                        |
-| Settings registry             | ❌ Not available                   | ✅ Available                                       |
-| Runtime reload                | ❌ Not supported                   | ✅ Supported                                       |
-| Persistence                   | ❌ In‑memory only                  | ✅ Optional implementations                        |
-| Delivery guarantees           | ❌ None                            | ✅ Optional / configurable                         |
-| Advanced orchestration        | ❌ Not provided                    | ✅ Available                                       |
-| Production hardening features | ❌ Minimal                         | ✅ Included                                        |
-| Author support                | ❌ Community only                  | ✅ Direct author support                           |
-| Commercial redistribution     | ❌ Not permitted                   | ✅ Permitted under license                         |
+Use of WJb in **commercial**, **SaaS**, **production**, or
+**closed‑source** environments requires a commercial license.
 
 ***
 
+## Commercial Edition
+
+The **Commercial Edition of WJb** extends the Base execution core with
+additional capabilities required for commercial, SaaS, and production use.
+
+It preserves the same explicit execution model and stable API contract,
+while adding runtime features, integrations, and operational guarantees
+needed for long‑term real‑world systems.
+
+***
+
+## Base vs Commercial
+
+| Area                          | **WJb Base**                      | **WJb Commercial (WJb.Pro)**                      |
+| ----------------------------- | --------------------------------- | ------------------------------------------------- |
+| Package                       | `WJb`                             | `WJb.Pro`                                         |
+| License                       | Apache License 2.0                | WJb — Commercial Capability License               |
+| Intended use                  | Open‑source, evaluation           | Commercial, SaaS, production, closed‑source       |
+| Job execution                 | ✅ Explicit, deterministic         | ✅ Explicit, deterministic                         |
+| Workflow routing              | ✅ Explicit                        | ✅ Extended                                        |
+| Scheduling (cron)             | ✅ Basic                           | ✅ Extended                                        |
+| Persistence                   | ❌ In‑memory only                  | ✅ Optional implementations                        |
+| Runtime reload                | ❌ Not supported                   | ✅ Supported                                       |
+| Delivery guarantees           | ❌ None                            | ✅ Optional / configurable                         |
+| Production hardening          | ❌ Minimal                         | ✅ Included                                        |
+| Author support                | ❌ Community only                  | ✅ Direct support                                  |
+
 ### Notes
 
-*   **WJb Base** is intentionally minimal and deterministic.  
-    If a feature is not listed, it does not exist.
-*   **WJb.Pro** does not change the execution philosophy — it **extends** it.
-*   Both editions share the same core concepts and API shape.
-*   Migration from Base to Commercial does **not** require rewriting domain logic.
+* **WJb Base** is intentionally minimal and deterministic.
+  If a feature is not listed, it does not exist.
+* **WJb.Pro** extends the Base edition without changing its execution philosophy.
+* Both editions share the same core API and concepts.
+* Migration from Base to Commercial does **not** require rewriting domain logic.
 
 ***
 
 ## License Types
 
-The commercial capabilities of **WJb** are available under the  
-**WJb — Commercial Capability License**, offered in the following variants:
+Commercial use of **WJb** is governed by the  
+**WJb — Commercial Capability License**, available in the following variants:
 
-*   **Solo License** — for individual developers  
-    <https://ukrguru.gumroad.com/l/wjb-solo-lic>
+* **Solo License** — for individual developers using WJb in commercial projects  
+  → https://ukrguru.gumroad.com/l/wjb-solo-lic
 
-*   **Team License** — for companies and teams  
-    <https://ukrguru.gumroad.com/l/wjb-team-lic>
+* **Team License** — for companies and development teams  
+  → https://ukrguru.gumroad.com/l/wjb-team-lic
 
 ***
 
-## WJb.Pro
+## WJb.Pro Package
 
-**WJb.Pro** is the commercial **package** of the **WJb product**.
+**WJb.Pro** is the commercial package of the **WJb product**.
 
-It enables commercial capabilities of **WJb** and is intended for
-**production**, **commercial**, **SaaS**, and **closed‑source** environments.
+It enables commercial capabilities and is intended for
+production, SaaS, and closed‑source environments.
 
-Use of WJb.Pro is governed by the  
-**WJb — Commercial Capability License (Solo)**.
+Use of WJb.Pro requires the appropriate
+**WJb — Commercial Capability License**.
+
+***
+
+## Commercial Usage Summary
+
+A commercial license is required if WJb is used in:
+
+* paid products or services
+* SaaS or hosted platforms
+* internal company systems
+* closed‑source or proprietary software
+* redistributed commercial software
+
+The Base edition remains suitable for
+open‑source projects, learning, and evaluation.
 
 ***
 
 ## Collaboration and Support
 
-**WJb** is actively developed and maintained by its author,
-with direct support available for commercial users.
+WJb is developed and maintained by its author.
 
-You can contact me regarding:
+Commercial users have access to direct collaboration and support,
+including:
 
-*   commercial licensing and renewals
-*   migration from WJb Base to commercial capabilities
-*   architectural adaptation to existing systems
-*   custom extensions and integrations
-*   consulting and long‑term technical support
+* licensing and renewals
+* migration from Base to Commercial
+* architectural guidance
+* custom extensions and integrations
+* long‑term technical support
 
-📧 **<ukrguru@gmail.com>**
-
-***
+📧 <ukrguru@gmail.com>
