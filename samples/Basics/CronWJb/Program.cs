@@ -8,34 +8,37 @@ using WJb.Extensions;
 
 Console.OutputEncoding = Encoding.UTF8;
 
-// ---------------------------------------------------------------------
-// Action registration with cron metadata
-// ---------------------------------------------------------------------
+// --------------------------------------------------
+// Actions
+// --------------------------------------------------
 
 var actions = new Dictionary<string, ActionItem>
 {
-    ["HelloEveryMinute"] = ActionItemFactory.Create(
-        typeof(DummyAction).AssemblyQualifiedName!,
-        new JsonObject
+    ["HelloEveryMinute"] = new ActionItem
+    {
+        Type = typeof(DummyAction).AssemblyQualifiedName!,
+        More = new JsonObject
         {
             ["cron"] = "* * * * *",
             ["priority"] = "ASAP",
             ["message"] = "Minute tick ✅"
-        }),
-
-    ["HelloWorkingHours"] = ActionItemFactory.Create(
-        typeof(DummyAction).AssemblyQualifiedName!,
-        new JsonObject
+        }
+    },
+    ["Hello9to5Weekdays"] = new ActionItem
+    {
+        Type = typeof(DummyAction).AssemblyQualifiedName!,
+        More = new JsonObject
         {
             ["cron"] = "* 9-21 * * 1-5",
             ["priority"] = "High",
-            ["message"] = "Working hours ping (Mon–Fri)"
-        })
+            ["message"] = "Working hours ping (every minute, Mon–Fri)"
+        }
+    }
 };
 
-// ---------------------------------------------------------------------
-// Host setup
-// ---------------------------------------------------------------------
+// --------------------------------------------------
+// Host
+// --------------------------------------------------
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging =>
@@ -44,16 +47,20 @@ using var host = Host.CreateDefaultBuilder(args)
         logging.AddSimpleConsole(opt =>
         {
             opt.SingleLine = true;
-            opt.TimestampFormat = "HH:mm:ss ";
+            opt.TimestampFormat = "HH:mm:ss.fff ";
         });
 
-        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Warning);
+        logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.None);
     })
     .ConfigureServices(services =>
     {
         services.AddWJb(actions, addScheduler: true);
     })
     .Build();
+
+// --------------------------------------------------
+// Startup info
+// --------------------------------------------------
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
@@ -65,11 +72,15 @@ foreach (var kv in actions)
     logger.LogInformation(" - {Action}: {Cron}", kv.Key, cron);
 }
 
+// --------------------------------------------------
+// Run
+// --------------------------------------------------
+
 await host.RunAsync();
 
-// =====================================================================
-// Action implementation
-// =====================================================================
+// --------------------------------------------------
+// Action
+// --------------------------------------------------
 
 public sealed class DummyAction(ILogger<DummyAction> logger) : IAction
 {
@@ -77,8 +88,10 @@ public sealed class DummyAction(ILogger<DummyAction> logger) : IAction
 
     public Task ExecAsync(JsonObject? jobMore, CancellationToken stoppingToken)
     {
-        var message = jobMore.GetString("message") ?? "Hello from DummyAction!";
+        var message = jobMore?.GetString("message") ?? "Hello from DummyAction!";
+
         _logger.LogInformation("{Message}", message);
+
         return Task.CompletedTask;
     }
 }

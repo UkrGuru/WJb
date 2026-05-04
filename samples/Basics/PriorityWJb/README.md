@@ -1,22 +1,25 @@
-# PriorityWJb
+# Priority WJb – Minimal Example
 
-A minimal example demonstrating
-how to enqueue and execute jobs with **priorities**
-using **WJb (Free edition)**.
+This example shows how to run **jobs with priorities** using **WJb**.
 
----
+Jobs with higher priority are executed before lower‑priority ones.
 
-## What this example demonstrates
+***
 
-1. A .NET host is started
-2. A single action (`PrintAction`) is registered
-3. Multiple jobs are enqueued explicitly
-4. Each job is assigned a priority
-5. The job processor processes jobs by priority order
+## What happens
 
-There is no implicit execution or orchestration.
+1.  The app starts a generic host
+2.  A priority job queue is registered
+3.  Three jobs are enqueued with different priorities
+4.  The job processor executes them in priority order
 
----
+Expected execution order:
+
+1.  High
+2.  Normal
+3.  Low
+
+***
 
 ## Enqueue jobs with priority
 
@@ -35,8 +38,7 @@ await jobs.EnqueueJobAsync(
 ```
 
 *   Each job is enqueued with an explicit `Priority`
-*   Higher priority jobs are processed before lower-priority ones
-*   Priority affects queue ordering only
+*   Higher priority jobs are processed first
 
 ***
 
@@ -45,10 +47,12 @@ await jobs.EnqueueJobAsync(
 ```csharp
 public sealed class PrintAction(ILogger<PrintAction> logger) : IAction
 {
-    public Task ExecAsync(JsonObject? jobMore, CancellationToken _)
+    private readonly ILogger<PrintAction> _logger = logger;
+
+    public Task ExecAsync(JsonObject? jobMore, CancellationToken cancellationToken)
     {
         var text = jobMore.GetString("text") ?? "<empty>";
-        logger.LogInformation(text);
+        _logger.LogInformation(text);
         return Task.CompletedTask;
     }
 }
@@ -75,9 +79,9 @@ info: PrintAction[0] Low priority
 
 ## Summary
 
-*   Jobs support explicit priorities
-*   Higher priority jobs are executed first
-*   The same action and processor are used
-*   Only queue ordering behavior changes
+*   Jobs support priorities
+*   Higher priority runs first
+*   Same actions, same processor
+*   Only the queue behavior changes
 
 ***

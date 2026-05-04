@@ -1,4 +1,7 @@
-﻿namespace WJb;
+﻿using System.Text.Json.Nodes;
+using WJb.Extensions;
+
+namespace WJb;
 
 /// <summary>
 /// Registry for retrieving settings values.
@@ -17,3 +20,4 @@ public sealed class SettingsRegistry : ISettingsRegistry
     public T Get<T>(string key, T defaultValue = default!)
         => defaultValue;
 }
+

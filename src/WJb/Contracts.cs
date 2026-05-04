@@ -133,9 +133,7 @@ public interface IJobScheduler
     /// This method represents the core scheduling contract.
     /// Hosting lifetime, delays, reloads, and threading are intentionally excluded.
     /// </remarks>
-    Task ProcessDueCronActionsAsync(
-        DateTime now,
-        CancellationToken cancellationToken = default);
+    Task ProcessDueCronActionsAsync(DateTime now, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Determines whether a cron expression is due at the specified time.
@@ -199,4 +197,3 @@ public enum Priority
     /// </summary>
     Low
 }
-

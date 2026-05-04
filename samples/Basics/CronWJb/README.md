@@ -1,91 +1,51 @@
 # CronWJb
 
-A minimal example demonstrating
-**cron-based scheduled job execution**
-using **WJb (Free edition)**.
-
-This sample shows how scheduling metadata
-can be attached to actions explicitly.
-
----
+Minimal cron-based scheduler using WJb.
 
 ## Overview
+CronWJb loads actions from *actions.json*, registers them with WJb, and executes them according to cron expressions.
 
-CronWJb registers actions with associated cron expressions
-and executes them deterministically using WJb’s scheduler.
-
-There is no implicit orchestration or hidden background logic.
-
----
-
-## What this example demonstrates
-
-1. A .NET host is started
-2. Actions are registered with cron metadata
-3. The WJb scheduler is enabled explicitly
-4. Jobs are generated according to cron expressions
-5. Actions execute on schedule
-
----
-
-## Cron metadata
-
-Cron expressions are attached to actions via metadata:
-
-```csharp
-new JsonObject
-{
-    ["cron"] = "* * * * *",
-    ["priority"] = "ASAP",
-    ["message"] = "Minute tick ✅"
-}
-```
-
-*   Cron expressions are treated as configuration
-*   They are not validated by WJb
-*   Absence of a cron expression means non‑scheduled action
-
-***
-
-## Action implementation
-
-```csharp
-public sealed class DummyAction(ILogger<DummyAction> logger) : IAction
-{
-    public Task ExecAsync(JsonObject? jobMore, CancellationToken _)
-    {
-        var message = jobMore.GetString("message") ?? "<empty>";
-        logger.LogInformation(message);
-        return Task.CompletedTask;
-    }
-}
-```
-
-***
+## Features
+- Cron-based scheduled job execution (advanced cron available in Commercial edition)
+- Simple action model (`IAction`).
+- JSON-based configuration.
+- UTF-8 console output.
 
 ## Run
-
-```bash
+```
 dotnet run
 ```
 
-Example output:
+## actions.json
+Contains a dictionary of actions with type and cron metadata.
 
-```text
-12:00:00 CronWJb started. Waiting for cron ticks...
-12:00:00  - HelloEveryMinute: * * * * *
-12:01:00 Minute tick ✅
+Example:
+```json
+{
+  "HelloEveryMinute": {
+    "Type": "DummyAction, CronWJb",
+    "More": {
+      "cron": "*/1 * * * *",
+      "priority": "ASAP",
+      "message": "Minute tick ✅"
+    }
+  },
+  "Hello9to5Weekdays": {
+    "Type": "DummyAction, CronWJb",
+    "More": {
+      "cron": "*/3 9-21 * * 1-5",
+      "priority": "High",
+      "message": "Working hours ping (every minute, Mon–Fri)"
+    }
+  }
+}
 ```
 
-***
+## Program.cs
+- Reads `actions.json`.
+- Registers WJb actions via `AddWJbActions`.
+- Enables scheduler via `AddWJbBase(jobScheduler: true)`.
+- Runs host.
 
-## Notes
-
-*   Scheduling is deterministic and snapshot‑based
-*   No persistence or retries are involved
-*   JSON‑based configuration is intentionally not shown here
-
-Advanced configuration examples are available
-in `samples/Advanced`.
-
-***
+## DummyAction
+A simple action that prints timestamp + message.

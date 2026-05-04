@@ -7,25 +7,26 @@
 **WJb** is a lightweight, deterministic background job execution library for .NET.
 
 It provides a **minimal execution core** for applications where background
-processing is part of the *domain logic*, not an infrastructural afterthought.
+processing is part of **explicit domain logic**, not an infrastructural side effect.
 
 WJb prioritizes **explicit execution**, **predictable behavior**, and
 **long‑term API stability** over convenience features or implicit orchestration.
 
 ***
 
-## Scope of the Free Edition
+## Scope of the Base Edition
 
-This package represents the **free core** of WJb.
+This package represents the **Base (free) edition** of WJb.
 
-It is intentionally limited to background job **execution mechanics** and
-does **not** include advanced features provided by the commercial edition.
+It is intentionally limited to **job execution primitives** and
+does **not** include advanced runtime features available in the commercial edition.
 
-The free edition is suitable for:
+The Base edition is suitable for:
 
-*   open‑source projects
-*   learning and evaluation
-*   non‑commercial usage
+*   Open‑source projects
+*   Learning and evaluation
+*   Small or embedded workers
+*   Deterministic background execution
 
 ***
 
@@ -33,10 +34,45 @@ The free edition is suitable for:
 
 *   Explicit job payloads (no ambient state)
 *   Queue‑first execution model
-*   Deterministic, single‑step execution
-*   Immutable metadata snapshots
-*   No implicit orchestration logic
+*   Deterministic, single‑step processing
+*   Immutable action metadata snapshots
+*   Explicit workflow routing
 *   Stable, contract‑based public API
+
+***
+
+## Base vs Commercial Comparison
+
+| Area                          | **WJb Base**                      | **WJb Commercial (WJb.Pro)**                      |
+| ----------------------------- | --------------------------------- | ------------------------------------------------- |
+| Product name                  | WJb                               | WJb                                               |
+| Package                       | `WJb`                             | `WJb.Pro`                                         |
+| License                       | Apache License 2.0                | WJb — Commercial Capability License (Solo / Team) |
+| Intended use                  | Open‑source, learning, evaluation | Commercial, SaaS, production, closed‑source       |
+| Job execution                 | ✅ Explicit, deterministic         | ✅ Explicit, deterministic                         |
+| Job payloads                  | ✅ JSON, explicit                  | ✅ JSON, explicit                                  |
+| Execution model               | ✅ Queue‑first                     | ✅ Queue‑first                                     |
+| Action model                  | ✅ `IAction`, explicit routing     | ✅ Same, extended capabilities                     |
+| Workflow routing              | ✅ Explicit (`IWorkflowAction`)    | ✅ Same, plus extensions                           |
+| Scheduling (cron)             | ✅ Basic                           | ✅ Extended                                        |
+| Settings registry             | ❌ Not available                   | ✅ Available                                       |
+| Runtime reload                | ❌ Not supported                   | ✅ Supported                                       |
+| Persistence                   | ❌ In‑memory only                  | ✅ Optional implementations                        |
+| Delivery guarantees           | ❌ None                            | ✅ Optional / configurable                         |
+| Advanced orchestration        | ❌ Not provided                    | ✅ Available                                       |
+| Production hardening features | ❌ Minimal                         | ✅ Included                                        |
+| Author support                | ❌ Community only                  | ✅ Direct author support                           |
+| Commercial redistribution     | ❌ Not permitted                   | ✅ Permitted under license                         |
+
+***
+
+### Notes
+
+*   **WJb Base** is intentionally minimal and deterministic.  
+    If a feature is not listed, it does not exist.
+*   **WJb.Pro** does not change the execution philosophy — it **extends** it.
+*   Both editions share the same core concepts and API shape.
+*   Migration from Base to Commercial does **not** require rewriting domain logic.
 
 ***
 
@@ -45,13 +81,13 @@ The free edition is suitable for:
 WJb is built around a small set of strict principles:
 
 *   **Actions control their own execution lifecycle**
-*   **Routing is explicit and owned by the action**
+*   **Routing is explicit and action‑owned**
 *   **Infrastructure executes — domain logic orchestrates**
 *   **Metadata is configuration, not state**
 *   **Nothing happens implicitly**
 
-If a job runs, it is because it was explicitly enqueued.  
-If a workflow continues, it is because an action explicitly decided so.
+If a job runs, it was explicitly enqueued.  
+If a workflow continues, an action explicitly decided so.
 
 ***
 
@@ -61,9 +97,12 @@ WJb intentionally does **not** provide:
 
 *   Automatic retries
 *   Background pipelines
-*   Hidden chaining
+*   Implicit chaining
 *   Distributed locks
-*   Persistent orchestration engines
+*   Persistence guarantees
+*   Workflow engines
+*   Runtime reload or mutation
+*   Settings registry (Base edition)
 
 These omissions are deliberate design decisions.
 
@@ -71,37 +110,37 @@ These omissions are deliberate design decisions.
 
 ## Documentation
 
-- **Architecture & execution model**  
-  → [README.architecture.md](README.architecture.md)
+*   **Architecture & execution model**  
+    → README.architecture.md
 
-- **Design decisions & trade‑offs**  
-  → [README.design.md](README.design.md)
+*   **Design decisions & trade‑offs**  
+    → README.design.md
 
-- **Commercial usage & collaboration**  
-  → [README.commercial.md](README.commercial.md)
+*   **Commercial edition & licensing**  
+    → README.commercial.md
 
-- **About the author**  
-  → [README.author.md](README.author.md)
+*   **About the author**  
+    → README.author.md
 
 ***
 
 ## Status
 
 *   Target framework: **.NET 8+**
-*   API contract version: **v0.29 (frozen)**
-*   Edition: **Free core**
+*   API contract version: **v0.30**
+*   Edition: **Base**
 *   Commercial edition: **WJb.Pro**
 
 ***
 
 ## Licensing
 
-The **free core** of WJb is available under the **Apache License 2.0**.
+The **Base edition** of WJb is available under the **Apache License 2.0**.
 
 Commercial, SaaS, and closed‑source usage requires a separate
 commercial license available as **WJb.Pro**.
 
-See [README.commercial.md](README.commercial.md) for details.
+See README.commercial.md for details.
 
 ***
 
@@ -115,3 +154,5 @@ See [README.commercial.md](README.commercial.md) for details.
 
 If this project helps you, you can support its development:  
 👉 <https://ko-fi.com/ukrguru>
+
+***
